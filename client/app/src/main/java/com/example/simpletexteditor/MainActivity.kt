@@ -4,25 +4,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.simpletexteditor.ui.partials.BottomBar
 import com.example.simpletexteditor.ui.partials.TopBar
+import com.example.simpletexteditor.ui.partials.main.TextEditor
 import com.example.simpletexteditor.ui.theme.AppTheme
 
 class MainActivity : ComponentActivity() {
@@ -37,39 +30,68 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+val textLines: MutableList<String> = mutableListOf(
+    "Row 1 Lorem ipsum dolor sit amet ndn afnis nasdf nsid sn",
+    "Row 2 cv ndn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn",
+    "Row 3 Lorem ipsum dolor sit am af e sfga s ff as ssdsfvm fdmmdfv dsfmndfsmdf fsn"
+)
+
 @Composable
 fun MainContent() {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { TopBar() },
         bottomBar = { BottomBar() }
-    ) {
-        innerPadding ->
-            Surface(modifier = Modifier.padding(innerPadding)) {
-                Editor()
-            }
+    ) { innerPadding ->
+        Surface(
+            modifier = Modifier
+                .consumeWindowInsets(innerPadding)
+                .padding(innerPadding)
+                .imePadding()
+        ) {
+            val sb: StringBuilder = StringBuilder()
+            textLines.map { sb.append(it); sb.append('\n') }
+            TextEditor(sb.toString())
+        }
     }
 }
 
-@Composable
-fun Editor() {
-    var displayedText by remember { mutableStateOf("") }
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        TextField(
-            displayedText,
-            onValueChange = {displayedText = it},
-            modifier = Modifier.fillMaxSize(),
-            singleLine = false,
-            minLines = 300,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
-            ),
-            visualTransformation = VisualTransformation.None
-        )
-    }
-}
 
 @Preview(showBackground = true)
 @Composable

@@ -1,5 +1,6 @@
 package com.example.simpletexteditor.ui.partials
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Redo
@@ -14,6 +15,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,7 +25,8 @@ import com.example.simpletexteditor.R
 
 @Composable
 fun TopBar() {
-    val showDropDown = remember{ mutableStateOf(false) }
+    val showFileDropDown = remember { mutableStateOf(false) }
+    val showOptionsDropDown = remember { mutableStateOf(false) }
 
     androidx.compose.material.TopAppBar(
         modifier = Modifier.safeDrawingPadding(),
@@ -31,49 +34,80 @@ fun TopBar() {
         title = {
             Text(
                 "File: aa un fdusn isudnui nrtn ntinhbn hiun",
+                modifier = Modifier.clickable(onClick = {
+                    showFileDropDown.value = !showFileDropDown.value
+                }),
                 overflow = TextOverflow.Ellipsis,
                 softWrap = false,
-                color = MaterialTheme.colorScheme.onPrimary)
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+
+            FileDropDown(showFileDropDown)
         },
         actions = {
-            IconButton(onClick = {showDropDown.value = !showDropDown.value}) {
+            IconButton(onClick = { showFileDropDown.value = !showFileDropDown.value }) {
                 Icon(
-                    if (showDropDown.value) {
+                    if (showFileDropDown.value) {
                         Icons.Filled.ArrowDropUp
-                    }
-                    else {
+                    } else {
                         Icons.Filled.ArrowDropDown
                     },
                     stringResource(R.string.show_open_files_acc),
-                    tint = MaterialTheme.colorScheme.onPrimary)
-            }
-            DropdownMenu(
-                expanded = showDropDown.value,
-                onDismissRequest = {showDropDown.value = false}) {
-                DropdownMenuItem(
-                    text = { Text("AAA") },
-                    onClick = {showDropDown.value = false})
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
 
             IconButton(onClick = {}) {
                 Icon(
                     Icons.AutoMirrored.Outlined.Undo,
                     stringResource(R.string.undo_acc),
-                    tint = MaterialTheme.colorScheme.onPrimary,)
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
             }
 
             IconButton(onClick = {}) {
                 Icon(
                     Icons.AutoMirrored.Outlined.Redo,
                     stringResource(R.string.redo_acc),
-                    tint = MaterialTheme.colorScheme.onPrimary)
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
             }
 
-            IconButton(onClick = {}) {
+            IconButton(onClick = { showOptionsDropDown.value = !showOptionsDropDown.value }) {
                 Icon(
                     Icons.Outlined.MoreVert,
                     stringResource(R.string.more_actions_acc),
-                    tint = MaterialTheme.colorScheme.onPrimary)
+                    tint = MaterialTheme.colorScheme.onPrimary
+                )
+                OptionsDropDown(showOptionsDropDown)
             }
         })
+}
+
+@Composable
+fun FileDropDown(shouldShow: MutableState<Boolean>) {
+    DropdownMenu(
+        expanded = shouldShow.value,
+        onDismissRequest = { shouldShow.value = false }) {
+        DropdownMenuItem(
+            text = { Text("AAA") },
+            onClick = { shouldShow.value = false })
+    }
+}
+
+@Composable
+fun OptionsDropDown(shouldShow: MutableState<Boolean>) {
+    DropdownMenu(
+        expanded = shouldShow.value,
+        onDismissRequest = { shouldShow.value = false }) {
+        DropdownMenuItem(
+            text = { Text("Export") },
+            onClick = { shouldShow.value = false })
+        DropdownMenuItem(
+            text = { Text("Document settings") },
+            onClick = { shouldShow.value = false })
+        DropdownMenuItem(
+            text = { Text("Settings") },
+            onClick = { shouldShow.value = false })
+    }
 }

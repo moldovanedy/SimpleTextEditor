@@ -1,0 +1,177 @@
+package com.example.simpletexteditor.ui.partials.main
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+
+@Composable
+fun TextEditor(textLines: MutableList<String>) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    val textFieldFocusRequester = remember { FocusRequester() }
+
+    var currentLine by remember { mutableIntStateOf(1) }
+    var currentColumn by remember { mutableIntStateOf(1) }
+
+    var userSelection by remember { mutableStateOf(TextRange(0, 0)) }
+
+    var textLayout: TextLayoutResult? = null
+    var thisRowText by remember {
+        mutableStateOf(
+            TextFieldValue(text = "", selection = TextRange(currentColumn))
+        )
+    }
+
+    suspend fun onRowClick(line: Int = 1, column: Int = 1) {
+        currentLine = line
+        currentColumn = column
+        delay(20)
+        thisRowText = TextFieldValue(text = thisRowText.text, selection = TextRange(column, 0))
+        textFieldFocusRequester.requestFocus()
+        keyboard?.show()
+    }
+
+    fun getCharPosition(tapPosition: Offset): Int {
+        var charIndex = -1
+        textLayout?.let {
+            //use the position of the tap to determine the character offset
+            charIndex = it.getOffsetForPosition(tapPosition)
+        }
+        return charIndex
+    }
+
+    //TODO: for extra options in a selection, see TextToolbar and \
+    //TODO (continue): https://stackoverflow.com/questions/68956792/floating-toolbar-for-text-selection-jetpack-compose
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier =
+            Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .horizontalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState())
+        )
+        {
+            SelectionContainer(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    textLines.forEachIndexed { index, text ->
+                        if (index + 1 == currentLine) {
+                            thisRowText =
+                                TextFieldValue(
+                                    text = text,
+                                    selection =
+                                    if (userSelection.length != 0)
+                                        thisRowText.selection
+                                    else
+                                        TextRange(currentColumn)
+                                )
+
+                            BasicTextField(
+                                thisRowText,
+                                onValueChange = {
+                                    thisRowText = it
+                                    textLines[index] = it.text
+                                    currentColumn = it.selection.start
+
+                                    userSelection =
+                                        if (it.selection.length > 0) {
+                                            it.selection
+                                        } else {
+                                            TextRange(0, 0)
+                                        }
+                                },
+                                modifier =
+                                Modifier
+                                    .focusRequester(textFieldFocusRequester)
+                                    .fillMaxWidth()
+                                    .background(color = MaterialTheme.colorScheme.surfaceContainerHigh),
+                                textStyle =
+                                LocalTextStyle.current.copy(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontSize = 20.sp
+                                ),
+                                cursorBrush = Brush.linearGradient(
+                                    colors = List(2) {
+                                        MaterialTheme.colorScheme.secondary
+                                        MaterialTheme.colorScheme.secondary
+                                    }),
+                                singleLine = true
+                            )
+                        } else {
+                            Text(
+                                text,
+                                fontSize = 20.sp,
+                                modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .pointerInput(Unit) {
+                                        detectTapGestures { offset ->
+                                            val column = getCharPosition(offset)
+                                            CoroutineScope(Dispatchers.Main).launch {
+                                                onRowClick(index + 1, column)
+                                            }
+                                        }
+                                    },
+                                onTextLayout = { layoutResult: TextLayoutResult ->
+                                    textLayout = layoutResult
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Row(modifier = Modifier.background(MaterialTheme.colorScheme.secondary)) {
+            Text(
+                "Ln: $currentLine, Col: $currentColumn",
+                color = MaterialTheme.colorScheme.onSecondary
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text(
+                "UTF-8",
+                color = MaterialTheme.colorScheme.onSecondary
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            Text(
+                "LF",
+                color = MaterialTheme.colorScheme.onSecondary
+            )
+        }
+    }
+}
