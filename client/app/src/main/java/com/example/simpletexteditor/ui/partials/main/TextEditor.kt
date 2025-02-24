@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
@@ -28,9 +29,11 @@ import androidx.compose.ui.text.input.getTextAfterSelection
 import androidx.compose.ui.text.input.getTextBeforeSelection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.simpletexteditor.ui.GlobalState
+import com.example.simpletexteditor.ui.partials.TopBar
 
 @Composable
-fun TextEditor(text: String) {
+fun TextEditor(globalState: GlobalState, text: String) {
     var currentLine by remember { mutableIntStateOf(1) }
     var currentColumn by remember { mutableIntStateOf(1) }
 
@@ -83,15 +86,33 @@ fun TextEditor(text: String) {
         if (isIndeterminate) {
             var count = 0
 
-            //now in absolute coordinates
-            i = value.selection.start
-            while (i >= 0) {
-                if (value.text[i] == '\n') {
-                    break
-                }
+            if (value.text[value.selection.start] == '\n' && value.selection.start >= 1) {
+                count = 1
 
-                i--
-                count++
+                //edge case (if this is false false): the row is has a single newline (empty)
+                if (value.text[value.selection.start - 1] != '\n') {
+                    //now in absolute coordinates
+                    i = value.selection.start - 1
+                    while (i >= 0) {
+                        if (value.text[i] == '\n') {
+                            break
+                        }
+
+                        i--
+                        count++
+                    }
+                }
+            } else {
+                //now in absolute coordinates
+                i = value.selection.start
+                while (i >= 0) {
+                    if (value.text[i] == '\n') {
+                        break
+                    }
+
+                    i--
+                    count++
+                }
             }
 
             currentColumn = count
@@ -100,44 +121,46 @@ fun TextEditor(text: String) {
         lastAbsoluteCharPosition = value.selection.start
     }
 
-    //TODO: for extra options in a selection, see TextToolbar and \
-    //TODO (continue): https://stackoverflow.com/questions/68956792/floating-toolbar-for-text-selection-jetpack-compose
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding()
+    ) {
+        TopBar(globalState)
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(
+        //TODO: for extra options in a selection, see TextToolbar and
+        // https://stackoverflow.com/questions/68956792/floating-toolbar-for-text-selection-jetpack-compose
+        BasicTextField(
+            state,
+            onValueChange = {
+                state = it
+                handleSelectionChanged(it)
+            },
             modifier =
             Modifier
                 .weight(1f)
-                .fillMaxWidth()
-                .background(color = MaterialTheme.colorScheme.surfaceContainerHigh)
                 .horizontalScroll(rememberScrollState())
                 .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
+                .padding(10.dp, 0.dp, 10.dp, 0.dp),
+            textStyle =
+            LocalTextStyle.current.copy(
+                color = MaterialTheme.colorScheme.onSurface,
+                fontSize = 20.sp
+            ),
+            cursorBrush = Brush.linearGradient(
+                colors = List(2) {
+                    MaterialTheme.colorScheme.secondary
+                    MaterialTheme.colorScheme.secondary
+                })
+        )
+
+
+        Row(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.secondary)
+                .padding(10.dp, 0.dp)
         ) {
-            BasicTextField(
-                state,
-                onValueChange = {
-                    state = it
-                    handleSelectionChanged(it)
-                },
-                modifier =
-                Modifier
-                    .fillMaxWidth()
-                    .padding(10.dp, 0.dp, 10.dp, 0.dp),
-                textStyle =
-                LocalTextStyle.current.copy(
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 20.sp
-                ),
-                cursorBrush = Brush.linearGradient(
-                    colors = List(2) {
-                        MaterialTheme.colorScheme.secondary
-                        MaterialTheme.colorScheme.secondary
-                    })
-            )
-        }
-
-
-        Row(modifier = Modifier.background(MaterialTheme.colorScheme.secondary)) {
             Text(
                 "Ln: $currentLine, Col: $currentColumn",
                 color = MaterialTheme.colorScheme.onSecondary

@@ -2,10 +2,27 @@
     <string name="app_name">Simple Text Editor</string>
     <string name="edit">Edit</string>
     <string name="cloud">Cloud</string>
-    <string name="edit_acc">Edit a text file</string>
-    <string name="cloud_acc">Access files from your account</string>
-    <string name="undo_acc">Undo the last modification</string>
-    <string name="redo_acc">Redo your previously undone change</string>
-    <string name="more_actions_acc">More actions</string>
-    <string name="show_open_files_acc">Show open files</string>
+
+    <string name="new_file">New file</string>
+    <string name="open_file">Open file</string>
+    <string name="export">Export</string>
+    <string name="document_settings">Document settings</string>
+
+
+    <string name="settings">Settings</string>
+    <string name="general">General</string>
+    <string name="undo_memory_limit">Undo memory limit (MB)</string>
+    <string name="undo_memory_limit_short_desc">The maximum memory occupied by your changes to the text. The default value is 50.</string>
+
+    <string name="always_save_on_cloud">Always save on cloud</string>
+    <string name="always_save_on_cloud_short_desc">If enabled, every time a new file is created, it will also be saved on the cloud.</string>
+
+
+    <string name="login">Log in</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="account_existence_statement">If you don\'t have an account, </string>
+
+    <string name="register">Register</string>
 </resources>

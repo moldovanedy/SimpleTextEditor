@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="acc_edit">Edit a text file</string>
+    <string name="acc_cloud">Access files from your account</string>
+    <string name="acc_undo">Undo the last modification</string>
+    <string name="acc_redo">Redo your previously undone change</string>
+    <string name="acc_more_actions">More actions</string>
+    <string name="acc_show_open_files">Show open files</string>
+
+    <string name="acc_go_back">Go back to the previous page</string>
+</resources>

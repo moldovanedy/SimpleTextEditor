@@ -22,9 +22,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.simpletexteditor.R
+import com.example.simpletexteditor.ui.GlobalState
 
 @Composable
-fun TopBar() {
+fun TopBar(globalState: GlobalState) {
     val showFileDropDown = remember { mutableStateOf(false) }
     val showOptionsDropDown = remember { mutableStateOf(false) }
 
@@ -52,7 +53,7 @@ fun TopBar() {
                     } else {
                         Icons.Filled.ArrowDropDown
                     },
-                    stringResource(R.string.show_open_files_acc),
+                    stringResource(R.string.acc_show_open_files),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -60,7 +61,7 @@ fun TopBar() {
             IconButton(onClick = {}) {
                 Icon(
                     Icons.AutoMirrored.Outlined.Undo,
-                    stringResource(R.string.undo_acc),
+                    stringResource(R.string.acc_undo),
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
             }
@@ -68,7 +69,7 @@ fun TopBar() {
             IconButton(onClick = {}) {
                 Icon(
                     Icons.AutoMirrored.Outlined.Redo,
-                    stringResource(R.string.redo_acc),
+                    stringResource(R.string.acc_redo),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
@@ -76,10 +77,10 @@ fun TopBar() {
             IconButton(onClick = { showOptionsDropDown.value = !showOptionsDropDown.value }) {
                 Icon(
                     Icons.Outlined.MoreVert,
-                    stringResource(R.string.more_actions_acc),
+                    stringResource(R.string.acc_more_actions),
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
-                OptionsDropDown(showOptionsDropDown)
+                OptionsDropDown(globalState, showOptionsDropDown)
             }
         })
 }
@@ -96,18 +97,24 @@ fun FileDropDown(shouldShow: MutableState<Boolean>) {
 }
 
 @Composable
-fun OptionsDropDown(shouldShow: MutableState<Boolean>) {
+fun OptionsDropDown(globalState: GlobalState, shouldShow: MutableState<Boolean>) {
     DropdownMenu(
         expanded = shouldShow.value,
         onDismissRequest = { shouldShow.value = false }) {
         DropdownMenuItem(
-            text = { Text("Export") },
+            text = { Text(stringResource(R.string.new_file)) },
             onClick = { shouldShow.value = false })
         DropdownMenuItem(
-            text = { Text("Document settings") },
+            text = { Text(stringResource(R.string.open_file)) },
             onClick = { shouldShow.value = false })
         DropdownMenuItem(
-            text = { Text("Settings") },
+            text = { Text(stringResource(R.string.export)) },
             onClick = { shouldShow.value = false })
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.document_settings)) },
+            onClick = { shouldShow.value = false })
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.settings)) },
+            onClick = { shouldShow.value = false; globalState.navController.navigate("/settings") })
     }
 }
