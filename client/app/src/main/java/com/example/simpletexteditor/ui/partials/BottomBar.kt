@@ -17,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -25,7 +26,7 @@ import com.example.simpletexteditor.ui.GlobalState
 
 @Composable
 fun BottomBar(globalState: GlobalState) {
-    val pageIndex = remember { mutableIntStateOf(0) }
+    val pageIndex = rememberSaveable { mutableIntStateOf(0) }
     var isSettingsRoute by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -47,8 +48,12 @@ fun BottomBar(globalState: GlobalState) {
                     onClickLabel = stringResource(R.string.acc_edit)
                 ),
                 onClick = {
+                    if (pageIndex.intValue == 0) {
+                        return@NavigationBarItem
+                    }
+
                     pageIndex.intValue = 0
-                    globalState.navController.popBackStack()
+                    globalState.navController.navigate("/")
                 },
                 icon = { Icon(Icons.Filled.Edit, null) },
                 label = { Text(stringResource(R.string.edit)) })
@@ -59,6 +64,10 @@ fun BottomBar(globalState: GlobalState) {
                     onClickLabel = stringResource(R.string.acc_cloud)
                 ),
                 onClick = {
+                    if (pageIndex.intValue == 1) {
+                        return@NavigationBarItem
+                    }
+
                     pageIndex.intValue = 1
                     globalState.navController.navigate("/cloud")
                 },

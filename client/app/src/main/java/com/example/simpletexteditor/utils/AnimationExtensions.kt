@@ -22,7 +22,7 @@ fun NavGraphBuilder.slideComposable(
     route: String,
     arguments: List<NamedNavArgument> = emptyList(),
     content:
-    @Composable()
+    @Composable
     (AnimatedContentScope.(NavBackStackEntry) -> Unit)
 ) {
     val enterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
@@ -34,14 +34,14 @@ fun NavGraphBuilder.slideComposable(
 
     val exitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
         slideOutHorizontally(
-            targetOffsetX = { -it / 3 },
+            targetOffsetX = { -it },
             animationSpec = tween(durationMillis = ANIM_DURATION, easing = LinearOutSlowInEasing)
         )
     }
 
     val popEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
         slideInHorizontally(
-            initialOffsetX = { -it / 3 },
+            initialOffsetX = { -it },
             animationSpec = tween(durationMillis = ANIM_DURATION, easing = LinearOutSlowInEasing)
         )
     }
@@ -52,7 +52,7 @@ fun NavGraphBuilder.slideComposable(
             animationSpec = tween(durationMillis = ANIM_DURATION, easing = LinearOutSlowInEasing)
         )
     }
-    
+
     composable(
         route,
         arguments = arguments,

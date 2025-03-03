@@ -9,5 +9,5 @@ import com.example.simpletexteditor.ui.partials.main.TextEditor
 fun MainPage(globalState: GlobalState) {
     val sb: StringBuilder = StringBuilder()
     textLines.map { sb.append(it); sb.append('\n') }
-    TextEditor(globalState = globalState, text = sb.toString())
+    TextEditor(globalState = globalState)
 }

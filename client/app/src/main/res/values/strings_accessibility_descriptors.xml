@@ -8,4 +8,14 @@
     <string name="acc_show_open_files">Show open files</string>
 
     <string name="acc_go_back">Go back to the previous page</string>
+    <string name="acc_open_dropdown">Open the selection window</string>
+    <string name="acc_close_dropdown">Close the selection window</string>
+
+    <string name="acc_show_password">Show password</string>
+    <string name="acc_hide_password">Hide password</string>
+
+    <string name="acc_close_file">Close file</string>
+    <string name="acc_save_on_cloud">Save on cloud</string>
+    <string name="acc_delete_file">Delete file</string>
+    <string name="acc_export_file">Export file</string>
 </resources>

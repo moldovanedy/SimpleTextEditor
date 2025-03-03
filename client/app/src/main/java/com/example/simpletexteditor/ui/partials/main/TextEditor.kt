@@ -17,108 +17,47 @@ import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.isCtrlPressed
+import androidx.compose.ui.input.key.isShiftPressed
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.getTextAfterSelection
-import androidx.compose.ui.text.input.getTextBeforeSelection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.simpletexteditor.textmanager.FileHandler
+import com.example.simpletexteditor.textmanager.TextEditorViewModel
 import com.example.simpletexteditor.ui.GlobalState
 import com.example.simpletexteditor.ui.partials.TopBar
 
 @Composable
-fun TextEditor(globalState: GlobalState, text: String) {
-    var currentLine by remember { mutableIntStateOf(1) }
-    var currentColumn by remember { mutableIntStateOf(1) }
-
-    var state by remember { mutableStateOf(TextFieldValue(text)) }
-    var lastAbsoluteCharPosition by remember { mutableIntStateOf(0) }
-
-    fun handleSelectionChanged(value: TextFieldValue) {
-        if (value.selection.start == lastAbsoluteCharPosition) {
-            return
+fun TextEditor(globalState: GlobalState, viewModel: TextEditorViewModel = viewModel()) {
+    LaunchedEffect(Unit) {
+        if (FileHandler.activeFileIndex == -1) {
+            FileHandler.createFile("New file", false)
+            FileHandler.activeFileIndex = FileHandler.getNumberOfOpenedFiles() - 1
         }
 
-        val isGoingForward: Boolean = value.selection.start > lastAbsoluteCharPosition
-        val cursorDiff = if (isGoingForward) {
-            value.getTextBeforeSelection(value.selection.start - lastAbsoluteCharPosition).text
-        } else {
-            value.getTextAfterSelection(lastAbsoluteCharPosition - value.selection.start).text
-        }
+        FileHandler.activeFileIndex = FileHandler.activeFileIndex.coerceIn(0, FileHandler.getNumberOfOpenedFiles() - 1)
 
-        var i = if (isGoingForward) 0 else lastAbsoluteCharPosition - value.selection.start - 1
-        val limit = if (isGoingForward) cursorDiff.length else -1
-        var isIndeterminate = false
+        //push the pending change
+        viewModel.pushChanges()
 
-        //goes from one end to the other, direction is specified by isGoingForward
-        while (i != limit) {
-            if (cursorDiff[i] == '\n') {
-                if (isGoingForward) {
-                    currentLine++
-                    currentColumn = 1
+        viewModel.canPushChanges = false
+        viewModel.onTextChanged(
+            TextFieldValue(
+                text = FileHandler.getActiveFileData()?.memoryFile?.content?.toString() ?: ""
+            )
+        )
+        viewModel.canPushChanges = true
 
-                    i++
-                } else {
-                    currentLine--
-                    //we don't know the number of characters on this row, so it's indeterminate
-                    isIndeterminate = true
-                    currentColumn = Int.MAX_VALUE
-                    i--
-                }
-                continue
-            }
-
-            if (isGoingForward) {
-                currentColumn++
-                i++
-            } else {
-                currentColumn--
-                i--
-            }
-        }
-
-        if (isIndeterminate) {
-            var count = 0
-
-            if (value.text[value.selection.start] == '\n' && value.selection.start >= 1) {
-                count = 1
-
-                //edge case (if this is false false): the row is has a single newline (empty)
-                if (value.text[value.selection.start - 1] != '\n') {
-                    //now in absolute coordinates
-                    i = value.selection.start - 1
-                    while (i >= 0) {
-                        if (value.text[i] == '\n') {
-                            break
-                        }
-
-                        i--
-                        count++
-                    }
-                }
-            } else {
-                //now in absolute coordinates
-                i = value.selection.start
-                while (i >= 0) {
-                    if (value.text[i] == '\n') {
-                        break
-                    }
-
-                    i--
-                    count++
-                }
-            }
-
-            currentColumn = count
-        }
-
-        lastAbsoluteCharPosition = value.selection.start
+        viewModel.currentMemoryFile = FileHandler.getActiveFileData()?.memoryFile
     }
 
     Column(
@@ -128,23 +67,42 @@ fun TextEditor(globalState: GlobalState, text: String) {
     ) {
         TopBar(globalState)
 
-        //TODO: for extra options in a selection, see TextToolbar and
-        // https://stackoverflow.com/questions/68956792/floating-toolbar-for-text-selection-jetpack-compose
         BasicTextField(
-            state,
-            onValueChange = {
-                state = it
-                handleSelectionChanged(it)
-            },
-            modifier =
-            Modifier
+            value = viewModel.textFieldValue,
+            onValueChange = viewModel::onTextChanged,
+            modifier = Modifier
                 .weight(1f)
                 .horizontalScroll(rememberScrollState())
                 .verticalScroll(rememberScrollState())
                 .fillMaxWidth()
-                .padding(10.dp, 0.dp, 10.dp, 0.dp),
-            textStyle =
-            LocalTextStyle.current.copy(
+                .padding(10.dp, 0.dp, 10.dp, 0.dp)
+                .onPreviewKeyEvent {
+                    if (it.type == KeyEventType.KeyUp) {
+                        return@onPreviewKeyEvent false
+                    }
+
+                    if (!it.isCtrlPressed) {
+                        return@onPreviewKeyEvent false
+                    }
+
+                    if (it.key == Key.Z) {
+                        if (it.isShiftPressed) {
+                            //Ctrl+Shift+Z is also a common redo shortcut
+                            //redo()
+                            viewModel.redo()
+                            return@onPreviewKeyEvent true
+                        }
+
+                        viewModel.undo()
+                        return@onPreviewKeyEvent true
+                    } else if (it.key == Key.Y) {
+                        viewModel.redo()
+                        return@onPreviewKeyEvent true
+                    }
+
+                    false
+                },
+            textStyle = LocalTextStyle.current.copy(
                 color = MaterialTheme.colorScheme.onSurface,
                 fontSize = 20.sp
             ),
@@ -162,7 +120,7 @@ fun TextEditor(globalState: GlobalState, text: String) {
                 .padding(10.dp, 0.dp)
         ) {
             Text(
-                "Ln: $currentLine, Col: $currentColumn",
+                "Ln: ${viewModel.currentLine}, Col: ${viewModel.currentColumn}",
                 color = MaterialTheme.colorScheme.onSecondary
             )
             Spacer(modifier = Modifier.weight(1f))

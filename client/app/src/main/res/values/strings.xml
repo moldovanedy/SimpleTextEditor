@@ -3,26 +3,65 @@
     <string name="edit">Edit</string>
     <string name="cloud">Cloud</string>
 
+    <string name="cancel">Cancel</string>
+    <string name="apply">Apply</string>
+    <string name="ok">OK</string>
+    <string name="create">Create</string>
+
     <string name="new_file">New file</string>
     <string name="open_file">Open file</string>
     <string name="export">Export</string>
     <string name="document_settings">Document settings</string>
 
 
+    <string name="open_files">Open files</string>
+    <string name="rename">Rename</string>
+
+    <string name="create_a_new_file">Create a new file</string>
+    <string name="file_name">File name</string>
+    <string name="save_on_cloud">Save on cloud</string>
+
+
     <string name="settings">Settings</string>
     <string name="general">General</string>
     <string name="undo_memory_limit">Undo memory limit (MB)</string>
-    <string name="undo_memory_limit_short_desc">The maximum memory occupied by your changes to the text. The default value is 50.</string>
+    <string name="undo_memory_limit_desc">The maximum memory occupied by your changes to the text. The default value is 50.</string>
 
     <string name="always_save_on_cloud">Always save on cloud</string>
-    <string name="always_save_on_cloud_short_desc">If enabled, every time a new file is created, it will also be saved on the cloud.</string>
+    <string name="always_save_on_cloud_desc">If enabled, every time a new file is created, it will also be saved on the cloud.</string>
 
+
+    <string name="doc_setting_eol">End of line</string>
+    <string name="doc_setting_eol_desc">The line terminator used. Most platforms support LF and it\'s the recommended value. If you don\'t know what this does, just leave it as LF.</string>
+    <string-array name="doc_setting_eol_values">
+        <item>LF (Unix)</item>
+        <item>CR (Macintosh)</item>
+        <item>CRLF (Windows)</item>
+    </string-array>
+
+    <string name="doc_setting_use_bom">Use Byte Order Mark (BOM)</string>
+    <string name="doc_setting_use_bom_desc">If enabled, the file will be saved with a Byte Order Mark. This is generally NOT recommended, but can help other apps to recognize the encoding properly (only for UTF-8).</string>
+
+    <string name="doc_setting_encoding">Encoding</string>
+    <string name="doc_setting_encoding_desc">The encoding used for this file. Always use UTF-8, except when working with very old apps that don\'t support UTF-8.</string>
+    <string-array name="doc_setting_encoding_values">
+        <item>UTF-8</item>
+        <item>ASCII</item>
+    </string-array>
 
     <string name="login">Log in</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="forgot_password">Forgot password</string>
-    <string name="account_existence_statement">If you don\'t have an account, </string>
+    <string name="account_not_existing_statement">If you don\'t have an account, </string>
 
     <string name="register">Register</string>
+    <string name="account_existing_statement">If you already have an account, </string>
+
+    <string name="password_reset">Password reset</string>
+    <string name="email_password_reset">Type in the email you used for this account. If the email is not used by any account, you will see an error.</string>
+    <string name="next">Next</string>
+    <string name="new_password">New password</string>
+    <string name="retype_password">Retype the password</string>
+    <string name="reset_password">Reset password</string>
 </resources>
