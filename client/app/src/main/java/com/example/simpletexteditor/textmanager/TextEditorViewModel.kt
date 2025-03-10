@@ -29,6 +29,12 @@ class TextEditorViewModel : ViewModel() {
     private var diffStartIndex: Int = -1
     private var isAdding: Boolean = true
 
+    fun refresh() {
+        resetValues()
+        currentLine = 1
+        currentColumn = 1
+    }
+
 
     fun onTextChanged(value: TextFieldValue) {
         if (value.text == "") {

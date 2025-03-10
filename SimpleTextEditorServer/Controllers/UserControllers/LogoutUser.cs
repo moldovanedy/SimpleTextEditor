@@ -1,10 +1,10 @@
+using System.Diagnostics;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
-using Newtonsoft.Json.Linq;
 using SimpleTextEditorServer.Models;
 
 namespace SimpleTextEditorServer.Controllers.UserControllers;
@@ -12,15 +12,14 @@ namespace SimpleTextEditorServer.Controllers.UserControllers;
 [ApiController]
 [Route("users")]
 [EnableRateLimiting("generalLimiter")]
-public class GetUserData : ControllerBase
+public class LogoutUser : ControllerBase
 {
-    [HttpGet]
+    [HttpPost("logout")]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
-    public async Task<IActionResult> GetUserDataEndpoint()
+    public async Task<IActionResult> LogoutUserEndpoint()
     {
         StringValues authToken = Request.Headers.Authorization;
         if (authToken.Count == 0 || (!authToken[0]?.StartsWith("Bearer ") ?? false))
@@ -33,18 +32,26 @@ public class GetUserData : ControllerBase
         {
             return Unauthorized("You are not logged in.");
         }
-            
-        //TODO: check token against the DB
-        await using var ctx = new AppDbContext();
-        User? user = await ctx.Users.FirstOrDefaultAsync(dbUser => dbUser.AuthToken == token);
-        if (user == null)
-        {
-            return Unauthorized("You are not logged in.");
-        }
 
-        return Ok(
-            new JObject(
-                new JProperty("username", user.Username),
-                new JProperty("email", user.Email)));
+        await using var ctx = new AppDbContext();
+        
+        try
+        {
+            User? user = await ctx.Users.FirstOrDefaultAsync(dbUser => dbUser.AuthToken == token);
+            
+            if (user == null)
+            {
+                return Unauthorized("You are not logged in.");
+            }
+            
+            ctx.Entry(user).CurrentValues[nameof(Models.User.AuthToken)] = "";
+            await ctx.SaveChangesAsync();
+            return Ok();
+        }
+        catch (DbUpdateException ex)
+        {
+            Trace.TraceError(ex.Message);
+            return StatusCode(500, "An unknown error occurred.");
+        }
     }
 }

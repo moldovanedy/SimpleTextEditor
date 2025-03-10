@@ -15,7 +15,7 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 
-private const val ANIM_DURATION = 300
+const val ANIM_DURATION = 300
 
 @ExperimentalAnimationApi
 fun NavGraphBuilder.slideComposable(

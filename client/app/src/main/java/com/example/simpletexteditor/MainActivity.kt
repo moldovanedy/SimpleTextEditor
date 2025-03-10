@@ -1,10 +1,12 @@
 package com.example.simpletexteditor
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,73 +17,57 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
-import com.example.simpletexteditor.textmanager.TextEditorViewModel
+import com.example.simpletexteditor.cloudmanager.FileManagement
 import com.example.simpletexteditor.ui.GlobalState
+import com.example.simpletexteditor.ui.pages.CloudPage
 import com.example.simpletexteditor.ui.pages.ForgotPassword
 import com.example.simpletexteditor.ui.pages.LoginPage
 import com.example.simpletexteditor.ui.pages.MainPage
 import com.example.simpletexteditor.ui.pages.RegisterPage
-import com.example.simpletexteditor.ui.pages.SettingsPage
 import com.example.simpletexteditor.ui.partials.BottomBar
 import com.example.simpletexteditor.ui.theme.AppTheme
 import com.example.simpletexteditor.utils.slideComposable
+import java.lang.ref.WeakReference
 
 class MainActivity : ComponentActivity() {
-    val textEditorViewModel: TextEditorViewModel by viewModels()
+    companion object {
+        private var _contextRef: WeakReference<Context>? = null
+        private var _activityRef: WeakReference<Activity>? = null
+
+        fun getContext(): Context? {
+            return _contextRef?.get()
+        }
+
+        fun getActivity(): Activity? {
+            return _activityRef?.get()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        _contextRef = WeakReference(applicationContext)
+        _activityRef = WeakReference(this)
+
+        FileManagement.refreshAuthToken()
+//        val success = FileHandler.loadFromStorage()
+//        if (!success) {
+//            Toast.makeText(this, this.resources.getText(R.string.local_load_failed), Toast.LENGTH_LONG).show()
+//        }
+
         setContent {
             AppTheme {
                 MainContent()
             }
         }
     }
-}
 
-val textLines: MutableList<String> = mutableListOf(
-    "Row 1 Lorem ipsum dolor sit amet ndn af nis na sdf ns id sn",
-    "Row 2 cv ndn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn",
-    "Row 3 Lorem ipsum dolor sit am af e sf ga s ff as ss dsf vm fdm md fv dsf mn df sm df fsn"
-)
+    override fun onDestroy() {
+        super.onDestroy()
+        _contextRef?.clear()
+        _activityRef?.clear()
+    }
+}
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
@@ -104,14 +90,25 @@ fun MainContent() {
                 startDestination = "/"
             ) {
                 slideComposable("/") { MainPage(globalState) }
-                slideComposable("/settings") { SettingsPage(globalState) }
-                slideComposable("/cloud") { LoginPage(globalState) }
+                slideComposable("/cloud") { CloudPage(globalState) }
                 slideComposable("/login") { LoginPage(globalState) }
                 slideComposable("/register") { RegisterPage(globalState) }
                 slideComposable("/forgotPassword") { ForgotPassword(globalState) }
             }
         }
     }
+}
+
+fun Context.getActivityOrNull(): Activity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is Activity)
+            return context
+
+        context = context.baseContext
+    }
+
+    return null
 }
 
 

@@ -27,7 +27,6 @@ public class AppDbContext : DbContext
             user.HasKey(x => x.Id);
             user.HasIndex(x => x.Id).IsUnique();
             user.HasIndex(x => x.Email).IsUnique();
-            user.HasIndex(x => x.Username);
 
             user
                 .HasMany(x => x.CreatedFiles)
@@ -36,7 +35,6 @@ public class AppDbContext : DbContext
                 .HasPrincipalKey(x => x.Id);
             
             user.Property(x => x.Id).IsRequired().HasColumnType("VARCHAR(36)");
-            user.Property(x => x.Username).IsRequired().HasMaxLength(255);
             user.Property(x => x.Email).IsRequired().HasMaxLength(255);
             user.Property(x => x.Password).IsRequired().HasMaxLength(255);
             user.Property(x => x.AuthToken).IsRequired().HasMaxLength(255);
@@ -52,7 +50,6 @@ public class AppDbContext : DbContext
             
             file.Property(x => x.Id).IsRequired().HasColumnType("VARCHAR(36)");
             file.Property(x => x.Name).IsRequired().HasMaxLength(255);
-            file.Property(x => x.Length).IsRequired();
             file.Property(x => x.DateCreated).IsRequired();
             file.Property(x => x.DateModified).IsRequired();
             file.Property(x => x.UserId).IsRequired();

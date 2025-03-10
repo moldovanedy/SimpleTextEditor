@@ -23,13 +23,7 @@ public class RegisterUser : ControllerBase
     [Produces("application/json")]
     public async Task<IActionResult> RegisterEndpoint(NewUserDto userDto)
     {
-        string? errorMessage = UserValidations.ValidateUsername(userDto.Username);
-        if (errorMessage != null)
-        {
-            return BadRequest(errorMessage);
-        }
-        
-        errorMessage = UserValidations.ValidateEmail(userDto.Email);
+        string? errorMessage = UserValidations.ValidateEmail(userDto.Email);
         if (errorMessage != null)
         {
             return BadRequest(errorMessage);
@@ -43,7 +37,7 @@ public class RegisterUser : ControllerBase
 
         var user = new User
         {
-            Email = userDto.Email, Username = userDto.Username
+            Email = userDto.Email
         };
             
         PasswordHasher<User> passwordHasher = new();
@@ -63,9 +57,9 @@ public class RegisterUser : ControllerBase
             {
                 await ctx.SaveChangesAsync();
             }
-            catch (DbUpdateException e)
+            catch (DbUpdateException ex)
             {
-                Trace.TraceError(e.Message);
+                Trace.TraceError(ex.Message);
                 return StatusCode(500, "An unknown error occurred.");
             }
         }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowDropUp
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -55,9 +56,18 @@ fun CustomSettingButton(
             .clickable(onClick = { showDescriptionDialog = true })
     )
     {
-        Text(name, fontWeight = FontWeight.Bold)
+        Text(
+            text = name,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
         content()
-        Text(description, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = description,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 
     if (showDescriptionDialog) {
@@ -67,7 +77,7 @@ fun CustomSettingButton(
             text = { Text(description, color = MaterialTheme.colorScheme.onSurface) },
             confirmButton = {
                 TextButton(onClick = { showDescriptionDialog = false }) {
-                    Text("OK")
+                    Text("OK", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
             onDismissRequest = { showDescriptionDialog = false },
@@ -94,8 +104,17 @@ fun SwitchSettingButton(
     )
     {
         Column(modifier = Modifier.weight(1f)) {
-            Text(name, fontWeight = FontWeight.Bold)
-            Text(description, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(
+                text = name,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = description,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                color = MaterialTheme.colorScheme.onSurface
+            )
         }
 
         Switch(
@@ -107,11 +126,11 @@ fun SwitchSettingButton(
     if (showDescriptionDialog) {
         AlertDialog(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            title = { Text(name, color = MaterialTheme.colorScheme.onSurface) },
+            title = { Text(text = name, color = MaterialTheme.colorScheme.onSurface) },
             text = { Text(description, color = MaterialTheme.colorScheme.onSurface) },
             confirmButton = {
                 TextButton(onClick = { showDescriptionDialog = false }) {
-                    Text("OK")
+                    Text("OK", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
             onDismissRequest = { showDescriptionDialog = false },
@@ -137,9 +156,19 @@ fun TextFieldButton(
             .clickable(onClick = { showDescriptionDialog = true })
     )
     {
-        TextField(text, onValueChange = onTextChanged, label = { Text(name) })
+        TextField(
+            text,
+            onValueChange =
+            onTextChanged,
+            label = { Text(name, color = MaterialTheme.colorScheme.onSurface) }
+        )
         content()
-        Text(description, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = description,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 
     if (showDescriptionDialog) {
@@ -149,7 +178,7 @@ fun TextFieldButton(
             text = { Text(description, color = MaterialTheme.colorScheme.onSurface) },
             confirmButton = {
                 TextButton(onClick = { showDescriptionDialog = false }) {
-                    Text("OK")
+                    Text("OK", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
             onDismissRequest = { showDescriptionDialog = false },
@@ -162,14 +191,14 @@ fun DropDownButton(
     name: String,
     description: String = "",
     values: Array<String>,
-    initialSelected: Int = 0,
+    indexOfSelected: Int = 0,
     onValueChanged: (Int) -> Unit,
     content: @Composable () -> Unit
 ) {
     var showDescriptionDialog by remember { mutableStateOf(false) }
 
     var expanded by remember { mutableStateOf(false) }
-    var selected by remember { mutableIntStateOf(initialSelected) }
+    var selected by remember { mutableIntStateOf(indexOfSelected) }
 
     Column(
         modifier =
@@ -180,7 +209,11 @@ fun DropDownButton(
     )
     {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(name, fontWeight = FontWeight.Bold)
+            Text(
+                text = name,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
             Spacer(modifier = Modifier.width(25.dp))
 
             Button(
@@ -195,10 +228,11 @@ fun DropDownButton(
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        if (selected >= values.size || selected < 0)
+                        text = if (selected >= values.size || selected < 0)
                             "?"
                         else
-                            values[selected]
+                            values[selected],
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.weight(1f))
 
@@ -220,7 +254,16 @@ fun DropDownButton(
                 ) {
                     values.forEachIndexed { i, el ->
                         DropdownMenuItem(
-                            text = { Text(el) },
+                            text = {
+                                Row {
+                                    Text(el, color = MaterialTheme.colorScheme.onSurface)
+
+                                    if (i == indexOfSelected) {
+                                        Spacer(modifier = Modifier.weight(1f))
+                                        Icon(imageVector = Icons.Filled.Check, contentDescription = "")
+                                    }
+                                }
+                            },
                             onClick = { selected = i; onValueChanged.invoke(i); expanded = false }
                         )
                     }
@@ -230,7 +273,12 @@ fun DropDownButton(
         }
 
         content()
-        Text(description, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(
+            text = description,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 
     if (showDescriptionDialog) {
@@ -240,7 +288,7 @@ fun DropDownButton(
             text = { Text(description, color = MaterialTheme.colorScheme.onSurface) },
             confirmButton = {
                 TextButton(onClick = { showDescriptionDialog = false }) {
-                    Text("OK")
+                    Text("OK", color = MaterialTheme.colorScheme.onSurface)
                 }
             },
             onDismissRequest = { showDescriptionDialog = false },

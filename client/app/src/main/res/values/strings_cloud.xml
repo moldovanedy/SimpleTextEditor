@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login">Log in</string>
+    <string name="logout">Log out</string>
+    <string name="email">Email</string>
+    <string name="password">Password</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="account_not_existing_statement">If you don\'t have an account, </string>
+
+    <string name="register">Register</string>
+    <string name="account_existing_statement">If you already have an account, </string>
+
+    <string name="password_reset">Password reset</string>
+    <string name="email_password_reset">Type in the email you used for this account. If the email is not used by any account, you will see an error.</string>
+    <string name="next">Next</string>
+    <string name="new_password">New password</string>
+    <string name="retype_password">Retype the password</string>
+    <string name="reset_password">Reset password</string>
+
+    <string name="password_error_short">Password is too short</string>
+    <string name="password_error_long">Password is too long</string>
+    <string name="password_error_needs_digits">Password must contain at least one digit</string>
+    <string name="password_error_needs_uppercase">Password must contain at least one upper case letter</string>
+    <string name="email_invalid">Email is invalid</string>
+    <string name="passwords_not_matching">Passwords don\'t match</string>
+
+
+    <string name="logout_failed">Could not log you out from the account</string>
+    <string name="confirm_file_delete_title">Permanently delete file?</string>
+    <string name="confirm_file_delete_text">Are you sure you want to permanently delete this file? This action cannot be undone.</string>
+
+
+    <string name="file_size">Size:\u00A0</string>
+    <string name="file_date_created">Date created:\u00A0</string>
+    <string name="file_date_modified">Date modified:\u00A0</string>
+</resources>

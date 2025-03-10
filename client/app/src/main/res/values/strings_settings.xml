@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings">Settings</string>
+    <string name="general">General</string>
+    <string name="editor_text_size">Editor text size</string>
+
+
+    <string name="doc_setting_eol">End of line</string>
+    <string name="doc_setting_eol_desc">The line terminator used. Most platforms support LF and it\'s the recommended value. If you don\'t know what this does, just leave it as LF.</string>
+    <string-array name="doc_setting_eol_values">
+        <item>LF (Unix)</item>
+        <item>CR (Macintosh)</item>
+        <item>CRLF (Windows)</item>
+    </string-array>
+
+    <string name="doc_setting_use_bom">Use Byte Order Mark (BOM)</string>
+    <string name="doc_setting_use_bom_desc">If enabled, the file will be saved with a Byte Order Mark. This is generally NOT recommended, but can help other apps to recognize the encoding properly (only for UTF-8).</string>
+
+    <string name="doc_setting_encoding">Encoding</string>
+    <string name="doc_setting_encoding_desc">The encoding used for this file. Always use UTF-8, except when working with very old apps that don\'t support UTF-8.</string>
+    <string-array name="doc_setting_encoding_values">
+        <item>UTF-8</item>
+        <item>ASCII</item>
+    </string-array>
+</resources>

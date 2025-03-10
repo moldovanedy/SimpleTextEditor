@@ -18,6 +18,9 @@ namespace SimpleTextEditorServer
         public static string? ConnectionString { get; private set; }
         public static MySqlServerVersion ServerVersion { get; private set; } 
             = new(new Version(8, 4, 4));
+
+        public static string JwtIssuer { get; private set; } = "";
+        public static string JwtSecret { get; private set; } = "";
         
         private static void Main(string[] args)
         {
@@ -85,12 +88,15 @@ namespace SimpleTextEditorServer
                                    throw new ApplicationException("JwtSecret not found")))
                        };
                    });
+            JwtIssuer = builder.Configuration.GetValue<string>("JwtIssuer") ?? "";
+            JwtSecret = builder.Configuration.GetValue<string>("JwtSecret") ?? "";
     
             builder.Services.AddProblemDetails();
     
             WebApplication app = builder.Build();
             app.UseRateLimiter();
             app.MapControllers();
+            app.UseExceptionHandler("/error");
     
             app.Run();
         }

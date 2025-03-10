@@ -51,6 +51,7 @@ fun DocumentSettings(onDismissRequested: () -> Unit) {
                 text = "Document settings",
                 textAlign = TextAlign.Center,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.headlineMedium
             )
 
@@ -94,12 +95,18 @@ fun DocumentSettings(onDismissRequested: () -> Unit) {
                 horizontalArrangement = Arrangement.End
             ) {
                 TextButton(onClick = { onDismissRequested.invoke() }) {
-                    Text(stringResource(R.string.cancel).uppercase())
+                    Text(
+                        stringResource(R.string.cancel).uppercase(),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
                 Spacer(modifier = Modifier.width(10.dp))
 
                 TextButton(onClick = { onDismissRequested.invoke() }) {
-                    Text(stringResource(R.string.apply).uppercase())
+                    Text(
+                        stringResource(R.string.apply).uppercase(),
+                        color = MaterialTheme.colorScheme.primary
+                    )
                 }
             }
         }

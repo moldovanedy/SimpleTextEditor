@@ -1,5 +1,5 @@
 namespace SimpleTextEditorServer.DTO.Users;
 
-public record NewUserDto(
+public record ForgotPasswordUserDto(
     string Email, 
-    string Password);
+    string NewPassword);

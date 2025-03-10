@@ -20,6 +20,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Delete
@@ -78,6 +80,7 @@ fun OpenFilesManager(onDismissRequested: () -> Unit) {
                 text = stringResource(R.string.open_files),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
+                color = MaterialTheme.colorScheme.onSurface,
                 style = MaterialTheme.typography.headlineMedium
             )
 
@@ -103,7 +106,10 @@ fun OpenFilesManager(onDismissRequested: () -> Unit) {
 
             Spacer(modifier = Modifier.height(20.dp))
             TextButton(onClick = { onDismissRequested.invoke() }, modifier = Modifier.align(Alignment.End)) {
-                Text(stringResource(R.string.cancel).uppercase())
+                Text(
+                    stringResource(R.string.cancel).uppercase(),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
@@ -131,6 +137,7 @@ private fun FileData(details: FileDetails, onSelected: () -> Unit, isActive: Boo
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 text = if (details.areChangesSavedLocally) "" else "\u2b24",
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.widthIn(13.dp)
             )
 
@@ -172,6 +179,7 @@ private fun FileData(details: FileDetails, onSelected: () -> Unit, isActive: Boo
                     text = details.name,
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -195,17 +203,32 @@ private fun FileData(details: FileDetails, onSelected: () -> Unit, isActive: Boo
 
         Row(modifier = Modifier.align(Alignment.End)) {
             IconButton(onClick = {}) {
-                Icon(
-                    imageVector = if (details.isSyncedWithServer) Icons.Filled.CloudSync else Icons.Filled.CloudOff,
-                    contentDescription = stringResource(R.string.acc_save_on_cloud),
-                    modifier = Modifier.size(28.dp)
-                )
+                Row {
+                    if (details.isStoredOnCloud) {
+                        //if synced (all changes saved)
+                        Icon(
+                            imageVector = if (details.isSyncedWithServer) Icons.Filled.CloudDone else Icons.Filled.CloudSync,
+                            contentDescription = stringResource(R.string.acc_save_on_cloud),
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+
+                    //if stored on cloud
+                    Icon(
+                        imageVector = if (details.isStoredOnCloud) Icons.Filled.Cloud else Icons.Filled.CloudOff,
+                        contentDescription = stringResource(R.string.acc_save_on_cloud),
+                        tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
 
             IconButton(onClick = {}) {
                 Icon(
                     imageVector = Icons.Filled.Share,
                     contentDescription = stringResource(R.string.acc_export_file),
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -214,6 +237,7 @@ private fun FileData(details: FileDetails, onSelected: () -> Unit, isActive: Boo
                 Icon(
                     imageVector = Icons.Filled.MoreVert,
                     contentDescription = stringResource(R.string.acc_more_actions),
+                    tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(28.dp)
                 )
 
@@ -238,7 +262,12 @@ private fun FileDataOptions(
         expanded = shouldShow,
         onDismissRequest = { onClose.invoke() }) {
         DropdownMenuItem(
-            text = { Text(stringResource(R.string.rename)) },
+            text = {
+                Text(
+                    stringResource(R.string.rename),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            },
             onClick = {
                 onClose.invoke()
                 onRenameRequested.invoke()

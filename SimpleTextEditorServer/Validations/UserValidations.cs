@@ -5,21 +5,6 @@ namespace SimpleTextEditorServer.Validations;
 
 public static partial class UserValidations
 {
-    public static string? ValidateUsername(string userName)
-    {
-        if (string.IsNullOrWhiteSpace(userName))
-        {
-            return "Username cannot be empty";
-        }
-
-        return userName.Length switch
-        {
-            < 3 => "Username is too short",
-            > 255 => "Username is too long",
-            _ => null
-        };
-    }
-
     public static string? ValidateEmail(string email)
     {
         MatchCollection matches = EmailRegex().Matches(email);

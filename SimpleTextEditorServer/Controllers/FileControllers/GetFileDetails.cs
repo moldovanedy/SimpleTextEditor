@@ -13,9 +13,9 @@ using SimpleTextEditorServer.Models;
 namespace SimpleTextEditorServer.Controllers.FileControllers;
 
 [ApiController]
-[Route("files")]
+[Route("files/details")]
 [EnableRateLimiting("generalLimiter")]
-public class GetFileData : ControllerBase
+public class GetFileDetails : ControllerBase
 {
     [HttpGet("{fileId}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -23,9 +23,9 @@ public class GetFileData : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
-    public async Task<IActionResult> GetFileDataEndpoint(string fileId)
+    public async Task<IActionResult> GetFileDetailsEndpoint(string fileId)
     {
-        if (Guid.TryParse(fileId, out Guid guid))
+        if (!Guid.TryParse(fileId, out Guid guid))
         {
             return BadRequest("File ID is invalid.");
         }
@@ -50,10 +50,12 @@ public class GetFileData : ControllerBase
             return NotFound("The file with the specified ID was not found.");
         }
 
+        int fileSize = FileManager.GetFileSize(file.Id, DateTimeOffset.FromUnixTimeSeconds(file.DateCreated));
+
         return Ok(new JObject(
             new JProperty("Id", file.Id),
             new JProperty("Name", file.Name),
-            new JProperty("Length", file.Length),
+            new JProperty("Size", fileSize),
             new JProperty("DateCreated", file.DateCreated),
             new JProperty("DateModified", file.DateModified)));
     }
@@ -64,7 +66,7 @@ public class GetFileData : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
-    public async Task<IActionResult> GetFileDataEndpoint()
+    public async Task<IActionResult> GetFilesDetailsEndpoint()
     {
         StringValues authToken = Request.Headers.Authorization;
         if (authToken.Count == 0 || (!authToken[0]?.StartsWith("Bearer ") ?? false))
@@ -84,13 +86,15 @@ public class GetFileData : ControllerBase
         JArray json = [];
         foreach (File file in files)
         {
+            int fileSize = FileManager.GetFileSize(file.Id, DateTimeOffset.FromUnixTimeSeconds(file.DateCreated));
+            
             json.Add(
                 new JObject(
-                    new JProperty("Id", file.Id),
-                    new JProperty("Name", file.Name),
-                    new JProperty("Length", file.Length),
-                    new JProperty("DateCreated", file.DateCreated),
-                    new JProperty("DateModified", file.DateModified)));
+                    new JProperty("id", file.Id),
+                    new JProperty("name", file.Name),
+                    new JProperty("size", fileSize),
+                    new JProperty("dateCreated", file.DateCreated),
+                    new JProperty("dateModified", file.DateModified)));
         }
         
         return Ok(json);

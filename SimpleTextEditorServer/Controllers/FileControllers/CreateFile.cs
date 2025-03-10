@@ -22,7 +22,7 @@ public class CreateFile : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Produces("application/json")]
-    public async Task<IActionResult> CreateFileEndpoint(string fileName)
+    public async Task<IActionResult> CreateFileEndpoint([FromBody] string fileName)
     {
         if (string.IsNullOrEmpty(fileName) || string.IsNullOrWhiteSpace(fileName))
         {
@@ -58,23 +58,33 @@ public class CreateFile : ControllerBase
                 return Unauthorized("You are not logged in.");
             }
 
+            DateTimeOffset timestamp = DateTimeOffset.UtcNow;
+            
             var file = new File
             {
                 Name = fileName,
                 UserId = userData.Id,
-                DateCreated = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                DateModified = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                DateCreated = timestamp.ToUnixTimeSeconds(),
+                DateModified = timestamp.ToUnixTimeSeconds()
             };
 
+            bool ioSuccess = FileManager.CreateFile(file.Id, timestamp);
+            if (!ioSuccess)
+            {
+                return StatusCode(500, "An unknown error occurred.");
+            }
+            
             await ctx.Files.AddAsync(file);
 
             try
             {
                 await ctx.SaveChangesAsync();
             }
-            catch (DbUpdateException e)
+            catch (DbUpdateException ex)
             {
-                Trace.TraceError(e.Message);
+                FileManager.DeleteFile(file.Id, timestamp);
+                
+                Trace.TraceError(ex.Message);
                 return StatusCode(500, "An unknown error occurred.");
             }
         }
