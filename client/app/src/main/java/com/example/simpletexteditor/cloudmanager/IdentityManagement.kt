@@ -54,7 +54,7 @@ class IdentityManagement {
                         apply()
                     }
 
-                    FileManagement.refreshAuthToken()
+                    CloudFileManagement.refreshAuthToken()
                     return null
                 }
 
@@ -81,7 +81,7 @@ class IdentityManagement {
                         apply()
                     }
 
-                    FileManagement.refreshAuthToken()
+                    CloudFileManagement.refreshAuthToken()
                     return null
                 }
 

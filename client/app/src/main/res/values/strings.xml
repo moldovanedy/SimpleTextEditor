@@ -11,17 +11,29 @@
 
     <string name="new_file">New file</string>
     <string name="open_file">Open file</string>
-    <string name="share">Share</string>
+    <string name="export_share">Export / Share</string>
     <string name="document_settings">Document settings</string>
 
 
     <string name="open_files">Open files</string>
+    <string name="delete_from_cloud">Delete from cloud</string>
     <string name="rename">Rename</string>
 
     <string name="create_a_new_file">Create a new file</string>
     <string name="file_name">File name</string>
     <string name="save_on_cloud">Save on cloud</string>
 
+    <string name="share_or_export_file">Share or export file</string>
+    <string name="export_explanation">You can export the file to your storage or share it to other applications. The file name should also contain the extension.</string>
+    <string name="save_on_device">Save on device</string>
+    <string name="share">Share</string>
+
 
     <string name="local_load_failed">Failed to load local data!</string>
+    <string name="file_name_already_exists">A file with the same name already exists. Renaming failed</string>
+
+    <string name="share_failed">Failed to share file!</string>
+    <string name="export_failed">Failed to export file to device storage!</string>
+
+    <string name="unknown_error">An unknown error occurred!</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.example.simpletexteditor.ui.partials.main
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
@@ -10,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.simpletexteditor.MainActivity
 import com.example.simpletexteditor.getActivityOrNull
 import com.example.simpletexteditor.textmanager.FileHandler
 import com.example.simpletexteditor.textmanager.TextEditorViewModel
@@ -50,6 +51,9 @@ fun TextEditor(globalState: GlobalState, viewModel: TextEditorViewModel = viewMo
 
     fun onActiveFileChanged(newIndex: Int) {
         activeFileRef = newIndex
+        //final save
+        viewModel.pushChanges()
+
         viewModel.currentMemoryFile = FileHandler.getActiveFileData()?.memoryFile
 
         viewModel.canPushChanges = false
@@ -63,13 +67,21 @@ fun TextEditor(globalState: GlobalState, viewModel: TextEditorViewModel = viewMo
         viewModel.refresh()
     }
 
+    @Suppress("UNUSED_PARAMETER")
+    fun onAppTerminating(x: Unit) {
+        viewModel.pushChanges()
+    }
+
     LaunchedEffect(Unit) {
         if (FileHandler.activeFileIndex == -1) {
             FileHandler.createFile("New file")
-            FileHandler.activeFileIndex = FileHandler.getNumberOfOpenedFiles() - 1
+            FileHandler.activeFileIndex = FileHandler.getNumberOfFiles() - 1
         }
 
-        FileHandler.activeFileIndex = FileHandler.activeFileIndex.coerceIn(0, FileHandler.getNumberOfOpenedFiles() - 1)
+        MainActivity.appTerminatingEvent -= ::onAppTerminating
+        MainActivity.appTerminatingEvent += ::onAppTerminating
+
+        FileHandler.activeFileIndex = FileHandler.activeFileIndex.coerceIn(0, FileHandler.getNumberOfFiles() - 1)
         FileHandler.activeFileChangedEvent -= ::onActiveFileChanged
         FileHandler.activeFileChangedEvent += ::onActiveFileChanged
 
@@ -93,11 +105,21 @@ fun TextEditor(globalState: GlobalState, viewModel: TextEditorViewModel = viewMo
                 .fillMaxSize()
                 .imePadding()
         ) {
-            TopBar(globalState)
+            TopBar(
+                globalState,
+                onUndo = { viewModel.undo() },
+                onRedo = { viewModel.redo() }
+            )
 
             BasicTextField(
                 value = viewModel.textFieldValue,
-                onValueChange = viewModel::onTextChanged,
+                onValueChange = {
+                    try {
+                        viewModel.onTextChanged(it)
+                    } catch (e: Exception) {
+                        Log.e("DBG", e.toString())
+                    }
+                },
                 modifier = Modifier
                     .weight(1f)
                     .horizontalScroll(rememberScrollState())
@@ -159,15 +181,6 @@ fun TextEditor(globalState: GlobalState, viewModel: TextEditorViewModel = viewMo
                     color = MaterialTheme.colorScheme.onSecondary
                 )
                 Spacer(modifier = Modifier.weight(1f))
-                Text(
-                    "UTF-8",
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    "LF",
-                    color = MaterialTheme.colorScheme.onSecondary
-                )
             }
         }
     }

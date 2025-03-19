@@ -41,53 +41,51 @@ public class CreateFile : ControllerBase
             return Unauthorized("You are not logged in.");
         }
 
-        await using (var ctx = new AppDbContext())
+        await using var ctx = new AppDbContext();
+        //if the user already has a file with the same name, deny it
+        if (await ctx.Files.AnyAsync(dbFile => dbFile.CreatedBy.AuthToken == token && dbFile.Name == fileName))
         {
-            //if the user already has a file with the same name, deny it
-            if (await ctx.Files.AnyAsync(dbFile => dbFile.CreatedBy.AuthToken == token && dbFile.Name == fileName))
-            {
-                return BadRequest("You already created a file with the same name.");
-            }
-            
-            var userData = await ctx.Users
-                .Select(user => new { user.Id, user.AuthToken })
-                .FirstOrDefaultAsync(dbUser => dbUser.AuthToken == token);
-
-            if (userData == null)
-            {
-                return Unauthorized("You are not logged in.");
-            }
-
-            DateTimeOffset timestamp = DateTimeOffset.UtcNow;
-            
-            var file = new File
-            {
-                Name = fileName,
-                UserId = userData.Id,
-                DateCreated = timestamp.ToUnixTimeSeconds(),
-                DateModified = timestamp.ToUnixTimeSeconds()
-            };
-
-            bool ioSuccess = FileManager.CreateFile(file.Id, timestamp);
-            if (!ioSuccess)
-            {
-                return StatusCode(500, "An unknown error occurred.");
-            }
-            
-            await ctx.Files.AddAsync(file);
-
-            try
-            {
-                await ctx.SaveChangesAsync();
-            }
-            catch (DbUpdateException ex)
-            {
-                FileManager.DeleteFile(file.Id, timestamp);
-                
-                Trace.TraceError(ex.Message);
-                return StatusCode(500, "An unknown error occurred.");
-            }
+            return BadRequest("You already created a file with the same name.");
         }
-        return Created();
+            
+        var userData = await ctx.Users
+            .Select(user => new { user.Id, user.AuthToken })
+            .FirstOrDefaultAsync(dbUser => dbUser.AuthToken == token);
+
+        if (userData == null)
+        {
+            return Unauthorized("You are not logged in.");
+        }
+
+        DateTimeOffset timestamp = DateTimeOffset.UtcNow;
+            
+        var file = new File
+        {
+            Name = fileName,
+            UserId = userData.Id,
+            DateCreated = timestamp.ToUnixTimeSeconds(),
+            DateModified = timestamp.ToUnixTimeSeconds()
+        };
+
+        bool ioSuccess = FileManager.CreateFile(file.Id, timestamp);
+        if (!ioSuccess)
+        {
+            return StatusCode(500, "An unknown error occurred.");
+        }
+            
+        await ctx.Files.AddAsync(file);
+
+        try
+        {
+            await ctx.SaveChangesAsync();
+            return Created("", file.Id);
+        }
+        catch (DbUpdateException ex)
+        {
+            FileManager.DeleteFile(file.Id, timestamp);
+                
+            Trace.TraceError(ex.Message);
+            return StatusCode(500, "An unknown error occurred.");
+        }
     }
 }

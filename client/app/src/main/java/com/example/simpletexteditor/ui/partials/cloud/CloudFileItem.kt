@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -27,6 +26,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,9 +43,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.simpletexteditor.MainActivity
 import com.example.simpletexteditor.R
-import com.example.simpletexteditor.cloudmanager.FileManagement
+import com.example.simpletexteditor.cloudmanager.CloudFileManagement
 import com.example.simpletexteditor.cloudmanager.dtos.file.FileDetailsDto
 import com.example.simpletexteditor.textmanager.FileHandler
+import com.example.simpletexteditor.textmanager.MemoryFile
+import com.example.simpletexteditor.ui.GlobalState
 import com.example.simpletexteditor.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -53,82 +55,150 @@ import java.util.Date
 import java.util.UUID
 
 @Composable
-fun CloudFileItem(data: FileDetailsDto, onDataModified: () -> Unit) {
+fun CloudFileItem(globalState: GlobalState?, data: FileDetailsDto, onDataModified: () -> Unit) {
     val dateFormatter = SimpleDateFormat.getDateTimeInstance()
+    val taskScope = rememberCoroutineScope()
 
     var isOptionsMenuOpened by remember { mutableStateOf(false) }
+    var isLoadingData by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .padding(horizontal = 10.dp)
-            .clickable(onClick = {})
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = data.name,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                softWrap = true,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.weight(1f))
-
-            IconButton(onClick = { isOptionsMenuOpened = true }) {
-                Icon(
-                    imageVector = Icons.Filled.MoreVert,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp)
-                )
-
-                OptionsDropdown(
-                    isVisible = isOptionsMenuOpened,
-                    onDismissRequested = { isOptionsMenuOpened = false },
-                    fileId = data.id,
-                    onDataModified = onDataModified
-                )
+    fun onOpen() {
+        var fileIdx = -1
+        FileHandler.getFileListRef().forEachIndexed { index, fileDetails ->
+            if (fileDetails.id.toString() == data.id) {
+                fileIdx = index
+                return@forEachIndexed
             }
         }
-        Spacer(modifier = Modifier.height(10.dp))
 
-        Row {
-            Text(
-                text = stringResource(R.string.file_size),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = data.size.toString(),
-                color = MaterialTheme.colorScheme.onSurface,
-                softWrap = true
-            )
+        if (fileIdx != -1) {
+            FileHandler.activeFileIndex = fileIdx
+            //the only way to get to the cloud page is from the edit page, so going back is ok
+            globalState?.navController?.popBackStack()
+            return
         }
 
-        Row {
-            Text(
-                text = stringResource(R.string.file_date_created),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = dateFormatter.format(Date(data.dateCreated * 1000L)),
-                color = MaterialTheme.colorScheme.onSurface,
-                softWrap = true
+        taskScope.launch {
+            val response: Pair<Boolean, String> =
+                CloudFileManagement.getFileContents(FileHandler.getActiveFileData()?.id.toString())
+
+            //on failure
+            if (!response.first) {
+                Toast.makeText(MainActivity.getContext(), response.second, Toast.LENGTH_LONG).show()
+                //the only way to get to the cloud page is from the edit page, so going back is ok
+                globalState?.navController?.popBackStack()
+                return@launch
+            }
+
+            isLoadingData = true
+
+            try {
+                val uuid = UUID.fromString(data.id)
+                FileHandler.createFile(data.name, true, uuid)
+                FileHandler.activeFileIndex = FileHandler.getNumberOfFiles() - 1
+
+                FileHandler.modifyFileContents(
+                    uuid,
+                    MemoryFile.TextDiff(textChange = response.second)
+                )
+            } catch (e: Exception) {
+                Log.e("DBG", e.toString())
+                Toast
+                    .makeText(
+                        MainActivity.getContext(),
+                        MainActivity.getActivity()?.getString(R.string.unknown_error),
+                        Toast.LENGTH_LONG
+                    ).show()
+            } finally {
+                //the only way to get to the cloud page is from the edit page, so going back is ok
+                globalState?.navController?.popBackStack()
+            }
+        }
+    }
+
+    if (isLoadingData) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(80.dp)
+                    .align(Alignment.Center),
+                color = MaterialTheme.colorScheme.secondary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
         }
+    } else {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                .padding(horizontal = 10.dp)
+                .clickable(onClick = { onOpen() })
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = data.name,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp,
+                    softWrap = true,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.weight(1f))
 
-        Row {
-            Text(
-                text = stringResource(R.string.file_date_modified),
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = dateFormatter.format(Date(data.dateModified * 1000L)),
-                color = MaterialTheme.colorScheme.onSurface,
-                softWrap = true
-            )
+                IconButton(onClick = { isOptionsMenuOpened = true }) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreVert,
+                        contentDescription = null,
+                        modifier = Modifier.size(32.dp)
+                    )
+
+                    OptionsDropdown(
+                        isVisible = isOptionsMenuOpened,
+                        onDismissRequested = { isOptionsMenuOpened = false },
+                        fileId = data.id,
+                        onDataModified = onDataModified
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row {
+                Text(
+                    text = stringResource(R.string.file_size),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = data.size.toString(),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    softWrap = true
+                )
+            }
+
+            Row {
+                Text(
+                    text = stringResource(R.string.file_date_created),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = dateFormatter.format(Date(data.dateCreated * 1000L)),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    softWrap = true
+                )
+            }
+
+            Row {
+                Text(
+                    text = stringResource(R.string.file_date_modified),
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = dateFormatter.format(Date(data.dateModified * 1000L)),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    softWrap = true
+                )
+            }
         }
     }
 }
@@ -202,7 +272,7 @@ private fun OptionsDropdown(
                         isInProgress = true
 
                         taskScope.launch {
-                            val error: String? = FileManagement.deleteFile(fileId)
+                            val error: String? = CloudFileManagement.deleteFile(fileId)
 
                             if (error != null) {
                                 Toast.makeText(MainActivity.getContext(), error, Toast.LENGTH_LONG).show()
@@ -210,7 +280,7 @@ private fun OptionsDropdown(
 
                             try {
                                 val uuid = UUID.fromString(fileId)
-                                FileHandler.closeFile(uuid)
+                                FileHandler.deleteLocalFile(uuid)
                             } catch (e: Exception) {
                                 Log.e("DBG", e.toString())
                             }
@@ -239,6 +309,7 @@ private fun OptionsDropdown(
 fun CloudFileItemPreview() {
     AppTheme {
         CloudFileItem(
+            null,
             FileDetailsDto(
                 id = "",
                 name = "file.txt",

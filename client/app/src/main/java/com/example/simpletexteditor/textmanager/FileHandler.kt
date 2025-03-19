@@ -5,11 +5,14 @@ import android.util.Log
 import com.example.simpletexteditor.MainActivity
 import com.example.simpletexteditor.utils.Event
 import kotlinx.serialization.json.Json
+import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.io.RandomAccessFile
 import java.util.UUID
 import kotlin.io.path.Path
 import kotlin.io.path.createFile
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 
 class FileHandler {
@@ -33,11 +36,15 @@ class FileHandler {
 
         fun loadFromStorage(): Boolean {
             val context = MainActivity.getContext() ?: return false
+            val activity = MainActivity.getActivity() ?: return false
 
-            //Path(context.filesDir.path.plus("/data.txt")).deleteIfExists()
-            if (Path(context.filesDir.path.plus(FILE_NAME)).exists()) {
+            //for testing only
+//            Path(context.filesDir.path.plus("/").plus(FILE_NAME)).deleteIfExists()
+//            return true
+
+            if (!Path(context.filesDir.path.plus("/").plus(FILE_NAME)).exists()) {
                 try {
-                    Path(context.filesDir.path.plus(FILE_NAME)).createFile()
+                    Path(context.filesDir.path.plus("/").plus(FILE_NAME)).createFile()
                 } catch (e: Exception) {
                     Log.e("DBG", e.toString())
                     return false
@@ -48,10 +55,7 @@ class FileHandler {
             var success: Boolean
 
             try {
-                fs = MainActivity.getContext()?.openFileInput(FILE_NAME)
-                if (fs == null) {
-                    return false
-                }
+                fs = context.openFileInput(FILE_NAME)
 
                 val bytes = fs.readBytes()
                 val str = bytes.toString(Charsets.UTF_8)
@@ -65,8 +69,8 @@ class FileHandler {
                     _openFiles.add(FileDetails.importFromSerializable(item))
                 }
 
-                activeFileIndex = 0
-                activeFileChangedEvent.invoke(0)
+                activeFileIndex = activity.getPreferences(Context.MODE_PRIVATE).getInt("LAST_OPENED_FILE", 0)
+                activeFileChangedEvent.invoke(activeFileIndex)
 
                 success = true
             } catch (e: Exception) {
@@ -80,13 +84,18 @@ class FileHandler {
         }
 
         fun saveToStorage(): Boolean {
+            val context = MainActivity.getContext() ?: return false
+            val activity = MainActivity.getActivity() ?: return false
+
             var fs: FileOutputStream? = null
             var success: Boolean
 
             try {
-                fs = MainActivity.getContext()?.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)
-                if (fs == null) {
-                    return false
+                fs = context.openFileOutput(FILE_NAME, Context.MODE_PRIVATE)
+                val prefs = activity.getPreferences(Context.MODE_PRIVATE)
+                with(prefs.edit()) {
+                    putInt("LAST_OPENED_FILE", activeFileIndex)
+                    apply()
                 }
 
                 val dataArray = mutableListOf<SavedFileDetails>()
@@ -107,14 +116,161 @@ class FileHandler {
         }
 
 
-        fun createFile(fileName: String, isStoredOnCloud: Boolean = false) {
-            _openFiles.add(
+        fun createFile(fileName: String, isStoredOnCloud: Boolean = false, givenId: UUID? = null) {
+            val context = MainActivity.getContext() ?: return
+            val fileDetails =
                 FileDetails(
+                    id = givenId ?: UUID.randomUUID(),
                     name = generateNewName(fileName),
                     memoryFile = MemoryFile(),
                     isStoredOnCloud = isStoredOnCloud
                 )
-            )
+
+            _openFiles.add(fileDetails)
+            Path(context.filesDir.path.plus("/").plus(fileDetails.id.toString())).createFile()
+        }
+
+        fun deleteLocalFile(id: UUID) {
+            val context = MainActivity.getContext() ?: return
+
+            _openFiles.removeIf { it.id == id }
+            Path(context.filesDir.path.plus("/").plus(id)).deleteIfExists()
+        }
+
+        fun modifyFileContents(id: UUID, diff: MemoryFile.TextDiff) {
+            val context = MainActivity.getContext() ?: return
+
+            if (!Path(context.filesDir.path.plus("/").plus(id)).exists()) {
+                try {
+                    Path(context.filesDir.path.plus("/").plus(id)).createFile()
+                } catch (e: Exception) {
+                    Log.e("DBG", e.toString())
+                    return
+                }
+            }
+
+            var fs: RandomAccessFile? = null
+
+            try {
+                fs = RandomAccessFile(File(context.filesDir.path.plus("/").plus(id)), "rw")
+
+                if (diff.index > fs.length()) {
+                    //it WILL execute the finally
+                    return
+                }
+
+                val diffBytes = diff.textChange.toByteArray(Charsets.UTF_8)
+
+                if (diff.isAdded) {
+                    fs.seek(diff.index.toLong())
+
+                    //if it's right at the end
+                    if (diff.index.toLong() == fs.length()) {
+                        fs.write(diffBytes)
+                    } else {
+                        val remainingBytes = ByteArray(fs.length().toInt() - diff.index)
+                        fs.read(remainingBytes, 0, remainingBytes.size)
+
+                        fs.seek(diff.index.toLong())
+                        fs.write(diffBytes)
+                        fs.write(remainingBytes)
+                    }
+                } else {
+                    val offset = diff.index + diffBytes.size
+                    fs.seek(offset.toLong())
+
+                    val remainingBytes = ByteArray(fs.length().toInt() - offset)
+                    fs.read(remainingBytes, 0, remainingBytes.size)
+
+                    fs.seek((offset - diffBytes.size).toLong())
+                    fs.setLength(fs.length() - diffBytes.size)
+                    fs.write(remainingBytes)
+                }
+            } catch (e: Exception) {
+                Log.e("DBG", e.toString())
+            } finally {
+                fs?.close()
+            }
+        }
+
+        fun resetFileID(details: FileDetails, newID: UUID) {
+            val context = MainActivity.getContext() ?: return
+            val oldID = details.id
+            val absolutePath = context.filesDir.path.plus("/")
+
+            if (!Path(absolutePath.plus(oldID)).exists()) {
+                return
+            }
+
+            val success = File(absolutePath.plus(oldID)).renameTo(File(absolutePath.plus(newID)))
+            if (!success) {
+                return
+            }
+
+            details.id = newID
+            saveToStorage()
+        }
+
+        fun fullyWriteFile(id: UUID, content: String) {
+            val context = MainActivity.getContext() ?: return
+
+            if (!Path(context.filesDir.path.plus("/").plus(id)).exists()) {
+                try {
+                    Path(context.filesDir.path.plus("/").plus(id)).createFile()
+                } catch (e: Exception) {
+                    Log.e("DBG", e.toString())
+                    return
+                }
+            }
+
+            var fs: FileOutputStream? = null
+
+            try {
+                fs = context.openFileOutput(id.toString(), Context.MODE_PRIVATE)
+                fs.write(content.toByteArray(Charsets.UTF_8))
+            } catch (e: Exception) {
+                Log.e("DBG", e.toString())
+            } finally {
+                fs?.close()
+            }
+        }
+
+        fun getFileContent(id: UUID): String {
+            val context = MainActivity.getContext() ?: return ""
+
+            if (!Path(context.filesDir.path.plus("/").plus(id)).exists()) {
+                return ""
+            }
+
+            var fs: FileInputStream? = null
+
+            try {
+                fs = context.openFileInput(id.toString())
+
+                val bytes = fs.readBytes()
+                fs?.close()
+                return bytes.toString(Charsets.UTF_8)
+            } catch (e: Exception) {
+                Log.e("DBG", e.toString())
+                fs?.close()
+                return ""
+            }
+        }
+
+        fun getNumberOfFiles(): Int {
+            return _openFiles.size
+        }
+
+        fun getFileListRef(): MutableList<FileDetails> {
+            return _openFiles
+        }
+
+        fun getActiveFileData(): FileDetails? {
+            if (activeFileIndex < 0 || activeFileIndex >= _openFiles.size) {
+                return null
+            }
+
+            return _openFiles[activeFileIndex]
         }
 
         fun generateNewName(givenName: String = "New file"): String {
@@ -130,30 +286,6 @@ class FileHandler {
                 givenName.plus(" ($newFileNameIndex)")
             else
                 givenName
-        }
-
-        fun closeFileAt(index: Int) {
-            _openFiles.removeAt(index)
-        }
-
-        fun closeFile(id: UUID) {
-            _openFiles.removeIf { it.id == id }
-        }
-
-        fun getNumberOfOpenedFiles(): Int {
-            return _openFiles.size
-        }
-
-        fun getOpenedFilesRef(): MutableList<FileDetails> {
-            return _openFiles
-        }
-
-        fun getActiveFileData(): FileDetails? {
-            if (activeFileIndex < 0 || activeFileIndex >= _openFiles.size) {
-                return null
-            }
-
-            return _openFiles[activeFileIndex]
         }
     }
 }

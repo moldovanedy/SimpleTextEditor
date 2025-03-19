@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.simpletexteditor.MainActivity
-import com.example.simpletexteditor.cloudmanager.FileManagement
+import com.example.simpletexteditor.cloudmanager.CloudFileManagement
 import com.example.simpletexteditor.cloudmanager.dtos.file.FileDetailsDto
 import com.example.simpletexteditor.ui.GlobalState
 import com.example.simpletexteditor.ui.partials.cloud.CloudFileItem
@@ -41,7 +41,6 @@ fun CloudPage(globalState: GlobalState?) {
 
     LaunchedEffect(isLoadingData) {
         if (files != null) {
-            Toast.makeText(MainActivity.getContext(), "Cached", Toast.LENGTH_LONG).show()
             isLoadingData = false
             return@LaunchedEffect
         }
@@ -64,7 +63,7 @@ fun CloudPage(globalState: GlobalState?) {
         }
 
         taskScope.launch {
-            val result: Pair<List<FileDetailsDto>?, String?> = FileManagement.getAllFilesDetails()
+            val result: Pair<List<FileDetailsDto>?, String?> = CloudFileManagement.getAllFilesDetails()
             if (result.first == null) {
                 //Error
                 Toast.makeText(MainActivity.getContext(), result.second, Toast.LENGTH_LONG).show()
@@ -97,7 +96,11 @@ fun CloudPage(globalState: GlobalState?) {
                     .verticalScroll(rememberScrollState())
             ) {
                 files?.map { fileData ->
-                    CloudFileItem(data = fileData, onDataModified = { files = null; isLoadingData = true })
+                    CloudFileItem(
+                        globalState = globalState,
+                        data = fileData,
+                        onDataModified = { files = null; isLoadingData = true }
+                    )
                     HorizontalDivider()
                 }
             }

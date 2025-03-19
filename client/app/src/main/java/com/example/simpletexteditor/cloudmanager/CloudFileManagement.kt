@@ -4,6 +4,8 @@ import android.content.Context
 import android.util.Log
 import com.example.simpletexteditor.MainActivity
 import com.example.simpletexteditor.cloudmanager.dtos.file.FileDetailsDto
+import com.example.simpletexteditor.cloudmanager.dtos.file.FileDiffDto
+import com.example.simpletexteditor.cloudmanager.dtos.file.FileFullUpdateDto
 import io.ktor.client.call.body
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
@@ -13,8 +15,9 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlinx.serialization.json.Json
+import kotlin.jvm.internal.Ref.ObjectRef
 
-class FileManagement {
+class CloudFileManagement {
     companion object {
         private var _authToken: String? = null
 
@@ -26,7 +29,7 @@ class FileManagement {
                 ?: ""
         }
 
-        suspend fun createFile(fileName: String): String? {
+        suspend fun createFile(fileName: String, serverId: ObjectRef<String>): String? {
             if (_authToken == null) {
                 return "You are not logged in."
             }
@@ -39,10 +42,14 @@ class FileManagement {
                         setBody("\"".plus(fileName).plus("\""))
                     }
 
-                return if (response.status.value == 201)
-                    null
-                else
-                    response.body()
+                if (response.status.value == 201) {
+                    var rawID: String = response.body()
+                    rawID = rawID.substring(1, rawID.length - 1)
+                    serverId.element = rawID
+                    return null
+                } else {
+                    return response.body()
+                }
             } catch (e: Exception) {
                 Log.e("DBG", e.toString())
                 return "An unknown error occurred on your side."
@@ -111,6 +118,54 @@ class FileManagement {
             } catch (e: Exception) {
                 Log.e("DBG", e.toString())
                 return Pair(null, "An unknown error occurred on your side.")
+            }
+        }
+
+        suspend fun updateFileByDiff(fileId: String, diff: FileDiffDto): String? {
+            if (_authToken == null) {
+                return "You are not logged in."
+            }
+
+            try {
+                val response =
+                    BaseClient.client.post(BaseClient.domain.plus("/files/${fileId}")) {
+                        contentType(ContentType.Application.Json)
+                        bearerAuth(_authToken.toString())
+                        setBody(Json.encodeToString(diff))
+                    }
+
+                return if (response.status.value == 200) {
+                    null
+                } else {
+                    response.body()
+                }
+            } catch (e: Exception) {
+                Log.e("DBG", e.toString())
+                return "An unknown error occurred on your side."
+            }
+        }
+
+        suspend fun fullyUpdateFile(fileId: String, content: String): String? {
+            if (_authToken == null) {
+                return "You are not logged in."
+            }
+
+            try {
+                val response =
+                    BaseClient.client.post(BaseClient.domain.plus("/files/${fileId}/full-update")) {
+                        contentType(ContentType.Application.Json)
+                        bearerAuth(_authToken.toString())
+                        setBody(Json.encodeToString(FileFullUpdateDto(content)))
+                    }
+
+                return if (response.status.value == 200) {
+                    null
+                } else {
+                    response.body()
+                }
+            } catch (e: Exception) {
+                Log.e("DBG", e.toString())
+                return "An unknown error occurred on your side."
             }
         }
 

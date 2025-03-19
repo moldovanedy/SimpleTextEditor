@@ -32,12 +32,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.simpletexteditor.R
 import com.example.simpletexteditor.textmanager.FileHandler
 import com.example.simpletexteditor.ui.GlobalState
-import com.example.simpletexteditor.ui.partials.main.DocumentSettings
 import com.example.simpletexteditor.ui.partials.main.OpenFilesManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopBar(globalState: GlobalState) {
+fun TopBar(globalState: GlobalState, onUndo: () -> Unit, onRedo: () -> Unit) {
     var showOpenFilesMenu by remember { mutableStateOf(false) }
     var showOptionsDropDown by remember { mutableStateOf(false) }
 
@@ -90,26 +89,26 @@ fun TopBar(globalState: GlobalState) {
                     )
                 }
 
-                IconButton(onClick = {}) {
+                IconButton(onClick = onUndo) {
                     Icon(
-                        Icons.AutoMirrored.Outlined.Undo,
-                        stringResource(R.string.acc_undo),
+                        imageVector = Icons.AutoMirrored.Outlined.Undo,
+                        contentDescription = stringResource(R.string.acc_undo),
                         tint = MaterialTheme.colorScheme.onPrimary,
                     )
                 }
 
-                IconButton(onClick = {}) {
+                IconButton(onClick = onRedo) {
                     Icon(
-                        Icons.AutoMirrored.Outlined.Redo,
-                        stringResource(R.string.acc_redo),
+                        imageVector = Icons.AutoMirrored.Outlined.Redo,
+                        contentDescription = stringResource(R.string.acc_redo),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
 
                 IconButton(onClick = { showOptionsDropDown = !showOptionsDropDown }) {
                     Icon(
-                        Icons.Outlined.MoreVert,
-                        stringResource(R.string.acc_more_actions),
+                        imageVector = Icons.Outlined.MoreVert,
+                        contentDescription = stringResource(R.string.acc_more_actions),
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                     OptionsDropDown(globalState, showOptionsDropDown, onClose = { showOptionsDropDown = false })
@@ -120,9 +119,9 @@ fun TopBar(globalState: GlobalState) {
 
 @Composable
 private fun OptionsDropDown(globalState: GlobalState, shouldShow: Boolean, onClose: () -> Unit) {
-    var isShowingDocumentSettings by remember { mutableStateOf(false) }
     var isShowingNewFileDialog by remember { mutableStateOf(false) }
     var isShowingAppSettings by remember { mutableStateOf(false) }
+    var isShowingExportShareDialog by remember { mutableStateOf(false) }
 
     DropdownMenu(
         expanded = shouldShow,
@@ -131,21 +130,11 @@ private fun OptionsDropDown(globalState: GlobalState, shouldShow: Boolean, onClo
             text = { Text(stringResource(R.string.new_file)) },
             onClick = { onClose.invoke(); isShowingNewFileDialog = true })
         DropdownMenuItem(
-            text = { Text(stringResource(R.string.open_file)) },
-            onClick = { onClose.invoke() })
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.share)) },
-            onClick = { onClose.invoke() })
-        DropdownMenuItem(
-            text = { Text(stringResource(R.string.document_settings)) },
-            onClick = { onClose.invoke(); isShowingDocumentSettings = true })
+            text = { Text(stringResource(R.string.export_share)) },
+            onClick = { onClose.invoke(); isShowingExportShareDialog = true })
         DropdownMenuItem(
             text = { Text(stringResource(R.string.settings)) },
             onClick = { onClose.invoke(); isShowingAppSettings = true })
-    }
-
-    if (isShowingDocumentSettings) {
-        DocumentSettings(onDismissRequested = { isShowingDocumentSettings = false })
     }
 
     if (isShowingNewFileDialog) {
@@ -154,6 +143,10 @@ private fun OptionsDropDown(globalState: GlobalState, shouldShow: Boolean, onClo
 
     if (isShowingAppSettings) {
         AppSettingsDialog(onDismissRequested = { isShowingAppSettings = false })
+    }
+
+    if (isShowingExportShareDialog) {
+        ExportSendPreview(onDismissRequested = { isShowingExportShareDialog = false })
     }
 }
 

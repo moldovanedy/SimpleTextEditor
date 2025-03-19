@@ -4,32 +4,29 @@ import kotlinx.serialization.Serializable
 import java.util.UUID
 
 data class FileDetails(
-    val name: String,
+    var name: String,
     val memoryFile: MemoryFile,
     var id: UUID = UUID.randomUUID(),
     var areChangesSavedLocally: Boolean = true,
-    var isSyncedWithServer: Boolean = false,
     var isStoredOnCloud: Boolean = false
 ) {
     fun exportToSerializable(): SavedFileDetails {
         return SavedFileDetails(
             name = this.name,
             id = this.id.toString(),
-            areChangesSavedLocally = this.areChangesSavedLocally,
-            isSyncedWithServer = this.isSyncedWithServer,
             isStoredOnCloud = this.isStoredOnCloud
         )
     }
 
     companion object {
         fun importFromSerializable(serializedData: SavedFileDetails): FileDetails {
+            val uuid = UUID.fromString(serializedData.id)
+            val memoryFile = MemoryFile(FileHandler.getFileContent(uuid))
+
             return FileDetails(
                 name = serializedData.name,
-                id = UUID.fromString(serializedData.id),
-                //TODO: get the data from the files
-                memoryFile = MemoryFile(),
-                areChangesSavedLocally = serializedData.areChangesSavedLocally,
-                isSyncedWithServer = serializedData.isSyncedWithServer,
+                id = uuid,
+                memoryFile = memoryFile,
                 isStoredOnCloud = serializedData.isStoredOnCloud
             )
         }
@@ -40,7 +37,9 @@ data class FileDetails(
 data class SavedFileDetails(
     val name: String,
     var id: String,
-    var areChangesSavedLocally: Boolean,
-    var isSyncedWithServer: Boolean,
+    @Deprecated("This is not used. It's here to avoid compatibility break")
+    var areChangesSavedLocally: Boolean = true,
+    @Deprecated("This is not used. It's here to avoid compatibility break")
+    var isSyncedWithServer: Boolean = true,
     var isStoredOnCloud: Boolean
 )

@@ -39,9 +39,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.simpletexteditor.MainActivity
 import com.example.simpletexteditor.R
-import com.example.simpletexteditor.cloudmanager.FileManagement
+import com.example.simpletexteditor.cloudmanager.CloudFileManagement
 import com.example.simpletexteditor.textmanager.FileHandler
 import kotlinx.coroutines.launch
+import java.util.UUID
+import kotlin.jvm.internal.Ref.ObjectRef
 
 @Composable
 fun NewFileDialog(onDismissRequested: () -> Unit) {
@@ -56,24 +58,30 @@ fun NewFileDialog(onDismissRequested: () -> Unit) {
 
         if (shouldSaveOnCloud) {
             taskScope.launch {
-                val error: String? = FileManagement.createFile(fileName)
+                val serverId = ObjectRef<String>()
+                val error: String? = CloudFileManagement.createFile(fileName, serverId)
 
                 if (error != null) {
                     Log.e("DBG", error)
                     Toast.makeText(MainActivity.getContext(), error, Toast.LENGTH_LONG).show()
                 }
 
-                FileHandler.createFile(fileName, error == null)
+                val uuid =
+                    try {
+                        UUID.fromString(serverId.element)
+                    } catch (e: Exception) {
+                        null
+                    }
+                FileHandler.createFile(fileName, error == null, uuid)
 
                 onDismissRequested.invoke()
                 isInProgress = false
-                FileHandler.activeFileIndex = FileHandler.getNumberOfOpenedFiles() - 1
+                FileHandler.activeFileIndex = FileHandler.getNumberOfFiles() - 1
             }
         } else {
             FileHandler.createFile(fileName)
-            FileHandler.activeFileIndex = FileHandler.getNumberOfOpenedFiles() - 1
+            FileHandler.activeFileIndex = FileHandler.getNumberOfFiles() - 1
         }
-
     }
 
     Dialog(

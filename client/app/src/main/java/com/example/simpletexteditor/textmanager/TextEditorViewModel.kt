@@ -1,5 +1,6 @@
 package com.example.simpletexteditor.textmanager
 
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -8,6 +9,14 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.getTextBeforeSelection
 import androidx.lifecycle.ViewModel
+import com.example.simpletexteditor.MainActivity
+import com.example.simpletexteditor.cloudmanager.CloudFileManagement
+import com.example.simpletexteditor.cloudmanager.dtos.file.FileDiffDto
+import kotlinx.coroutines.runBlocking
+import java.util.Timer
+import java.util.TimerTask
+import kotlin.concurrent.thread
+import kotlin.math.min
 
 class TextEditorViewModel : ViewModel() {
     var currentLine by mutableIntStateOf(1)
@@ -29,6 +38,8 @@ class TextEditorViewModel : ViewModel() {
     private var diffStartIndex: Int = -1
     private var isAdding: Boolean = true
 
+    private var timer = Timer()
+
     fun refresh() {
         resetValues()
         currentLine = 1
@@ -37,18 +48,56 @@ class TextEditorViewModel : ViewModel() {
 
 
     fun onTextChanged(value: TextFieldValue) {
+        timer.cancel()
+        timer = Timer()
+        timer.schedule(getTimerCompletedTask(), 1000)
+
+        val previousIndex = lastAbsoluteCharPosition
+        val previousText = textFieldValue.text
+        val previousSelection = textFieldValue.selection
+
         if (value.text == "") {
             lastAbsoluteCharPosition = 0
         }
 
-        val previousIndex = lastAbsoluteCharPosition
-        val previousText = textFieldValue.text
+        try {
+            handleSelectionChanged(value)
+        } catch (_: Exception) {
+            resetLineCounter()
+        }
 
-        handleSelectionChanged(value)
         textFieldValue = value
 
         if (!canPushChanges) {
             return
+        }
+
+        //when only the selection changes
+        if (previousText == value.text) {
+            //if there were no changes, this will not actually push changes
+            pushChanges()
+            lastAbsoluteCharPosition = min(value.selection.start, value.selection.end)
+            return
+        }
+
+        //the text is different and the selection was spanning multiple characters, it means those characters were removed
+        if (previousSelection.length > 0) {
+            isAdding = false
+            diff.clear()
+
+            val start: Int
+            val end: Int
+            if (previousSelection.start <= previousSelection.end) {
+                start = previousSelection.start
+                end = previousSelection.end
+            } else {
+                start = previousSelection.end
+                end = previousSelection.start
+            }
+
+            diff.append(previousText.substring(start, end))
+            diffStartIndex = start
+            pushChanges()
         }
 
         if (previousIndex <= lastAbsoluteCharPosition) {
@@ -74,18 +123,43 @@ class TextEditorViewModel : ViewModel() {
     }
 
     fun pushChanges() {
+        timer.cancel()
+        timer = Timer()
+
         if (diff.isEmpty() || diffStartIndex < 0) {
             return
         }
 
-        currentMemoryFile?.pushChange(
+        val diff =
             MemoryFile.TextDiff(
                 textChange = diff.toString(),
                 index = diffStartIndex,
                 isAdded = isAdding
             )
-        )
+
+        currentMemoryFile?.pushChange(diff)
         resetValues()
+
+        val id = FileHandler.getActiveFileData()?.id ?: return
+        FileHandler.modifyFileContents(id, diff)
+
+        if (FileHandler.getActiveFileData()?.isStoredOnCloud == true) {
+            thread {
+                runBlocking {
+                    val error: String? =
+                        CloudFileManagement.updateFileByDiff(
+                            FileHandler.getActiveFileData()?.id.toString(),
+                            FileDiffDto(diff.textChange, diff.isAdded, diff.index)
+                        )
+
+                    if (error != null) {
+                        MainActivity.getActivity()?.runOnUiThread {
+                            Toast.makeText(MainActivity.getContext(), error, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     fun undo() {
@@ -145,11 +219,8 @@ class TextEditorViewModel : ViewModel() {
         val limit = if (isGoingForward) cursorDiff.length else -1
         var isIndeterminate = false
 
-        //TODO: this prevents crashes, but it must be solved, so that the line counter does not remain outdated
         if (i >= cursorDiff.length) {
-            lastAbsoluteCharPosition = 0
-            currentLine = 1
-            currentColumn = 1
+            resetLineCounter()
             return
         }
 
@@ -215,7 +286,29 @@ class TextEditorViewModel : ViewModel() {
             currentColumn = count
         }
 
-        lastAbsoluteCharPosition = value.selection.start
+        lastAbsoluteCharPosition = min(value.selection.start, value.selection.end)
+    }
+
+    private fun resetLineCounter() {
+        currentLine = 1
+        currentColumn = 1
+
+        var i = 0
+        while (i < textFieldValue.selection.start) {
+            if (textFieldValue.text[i] == '\n') {
+                currentLine++
+                currentColumn = 1
+            }
+
+            currentColumn++
+            i++
+        }
+    }
+
+    private fun getTimerCompletedTask() = object : TimerTask() {
+        override fun run() {
+            pushChanges()
+        }
     }
 
     private fun resetValues() {

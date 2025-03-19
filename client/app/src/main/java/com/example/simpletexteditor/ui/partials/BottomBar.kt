@@ -1,5 +1,6 @@
 package com.example.simpletexteditor.ui.partials
 
+import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,17 +22,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import com.example.simpletexteditor.MainActivity
 import com.example.simpletexteditor.R
 import com.example.simpletexteditor.ui.GlobalState
 
 @Composable
 fun BottomBar(globalState: GlobalState) {
-    val pageIndex = rememberSaveable { mutableIntStateOf(0) }
+    var pageIndex by rememberSaveable { mutableIntStateOf(0) }
     var isSettingsRoute by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         globalState.navController.addOnDestinationChangedListener { _, newRoute, _ ->
             isSettingsRoute = newRoute.route == "/settings"
+            pageIndex = if (newRoute.route == "/") 0 else 1
         }
     }
 
@@ -42,33 +45,45 @@ fun BottomBar(globalState: GlobalState) {
     ) {
         NavigationBar {
             NavigationBarItem(
-                selected = pageIndex.intValue == 0,
+                selected = pageIndex == 0,
                 modifier = Modifier.clickable(
                     onClick = {},
                     onClickLabel = stringResource(R.string.acc_edit)
                 ),
                 onClick = {
-                    if (pageIndex.intValue == 0) {
+                    if (pageIndex == 0) {
                         return@NavigationBarItem
                     }
 
-                    pageIndex.intValue = 0
-                    globalState.navController.navigate("/")
+                    val authToken: String =
+                        MainActivity
+                            .getActivity()
+                            ?.getPreferences(Context.MODE_PRIVATE)
+                            ?.getString("AUTH_TOKEN", "")
+                            ?: ""
+
+                    pageIndex = 0
+
+                    if (authToken.isNotEmpty()) {
+                        globalState.navController.popBackStack()
+                    } else {
+                        globalState.navController.navigate("/")
+                    }
                 },
                 icon = { Icon(Icons.Filled.Edit, null) },
                 label = { Text(stringResource(R.string.edit)) })
             NavigationBarItem(
-                selected = pageIndex.intValue == 1,
+                selected = pageIndex == 1,
                 modifier = Modifier.clickable(
                     onClick = {},
                     onClickLabel = stringResource(R.string.acc_cloud)
                 ),
                 onClick = {
-                    if (pageIndex.intValue == 1) {
+                    if (pageIndex == 1) {
                         return@NavigationBarItem
                     }
 
-                    pageIndex.intValue = 1
+                    pageIndex = 1
                     globalState.navController.navigate("/cloud")
                 },
                 icon = { Icon(Icons.Filled.Cloud, null) },
