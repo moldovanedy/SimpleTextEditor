@@ -19,10 +19,10 @@ import kotlin.jvm.internal.Ref.ObjectRef
 
 class CloudFileManagement {
     companion object {
-        private var _authToken: String? = null
+        internal var authToken: String? = null
 
         fun refreshAuthToken() {
-            _authToken = MainActivity
+            authToken = MainActivity
                 .getActivity()
                 ?.getPreferences(Context.MODE_PRIVATE)
                 ?.getString("AUTH_TOKEN", "")
@@ -30,7 +30,7 @@ class CloudFileManagement {
         }
 
         suspend fun createFile(fileName: String, serverId: ObjectRef<String>): String? {
-            if (_authToken == null) {
+            if (authToken == null) {
                 return "You are not logged in."
             }
 
@@ -38,7 +38,7 @@ class CloudFileManagement {
                 val response =
                     BaseClient.client.post(BaseClient.domain.plus("/files")) {
                         contentType(ContentType.Application.Json)
-                        bearerAuth(_authToken.toString())
+                        bearerAuth(authToken.toString())
                         setBody("\"".plus(fileName).plus("\""))
                     }
 
@@ -57,7 +57,7 @@ class CloudFileManagement {
         }
 
         suspend fun getFileContents(fileId: String): Pair<Boolean, String> {
-            if (_authToken == null) {
+            if (authToken == null) {
                 return Pair(true, "You are not logged in.")
             }
 
@@ -65,7 +65,7 @@ class CloudFileManagement {
                 val response =
                     BaseClient.client.get(BaseClient.domain.plus("/files/${fileId}")) {
                         contentType(ContentType.Text.Plain)
-                        bearerAuth(_authToken.toString())
+                        bearerAuth(authToken.toString())
                     }
 
                 return Pair(response.status.value == 200, response.body())
@@ -76,7 +76,7 @@ class CloudFileManagement {
         }
 
         suspend fun getFileDetails(fileId: String): Pair<FileDetailsDto?, String?> {
-            if (_authToken == null) {
+            if (authToken == null) {
                 return Pair(null, "You are not logged in.")
             }
 
@@ -84,7 +84,7 @@ class CloudFileManagement {
                 val response =
                     BaseClient.client.get(BaseClient.domain.plus("/files/details/${fileId}")) {
                         contentType(ContentType.Text.Plain)
-                        bearerAuth(_authToken.toString())
+                        bearerAuth(authToken.toString())
                     }
 
                 return if (response.status.value == 200) {
@@ -99,7 +99,7 @@ class CloudFileManagement {
         }
 
         suspend fun getAllFilesDetails(): Pair<List<FileDetailsDto>?, String?> {
-            if (_authToken == null) {
+            if (authToken == null) {
                 return Pair(null, "You are not logged in.")
             }
 
@@ -107,7 +107,7 @@ class CloudFileManagement {
                 val response =
                     BaseClient.client.get(BaseClient.domain.plus("/files/details")) {
                         contentType(ContentType.Text.Plain)
-                        bearerAuth(_authToken.toString())
+                        bearerAuth(authToken.toString())
                     }
 
                 return if (response.status.value == 200) {
@@ -122,7 +122,7 @@ class CloudFileManagement {
         }
 
         suspend fun updateFileByDiff(fileId: String, diff: FileDiffDto): String? {
-            if (_authToken == null) {
+            if (authToken == null) {
                 return "You are not logged in."
             }
 
@@ -130,7 +130,7 @@ class CloudFileManagement {
                 val response =
                     BaseClient.client.post(BaseClient.domain.plus("/files/${fileId}")) {
                         contentType(ContentType.Application.Json)
-                        bearerAuth(_authToken.toString())
+                        bearerAuth(authToken.toString())
                         setBody(Json.encodeToString(diff))
                     }
 
@@ -146,7 +146,7 @@ class CloudFileManagement {
         }
 
         suspend fun fullyUpdateFile(fileId: String, content: String): String? {
-            if (_authToken == null) {
+            if (authToken == null) {
                 return "You are not logged in."
             }
 
@@ -154,7 +154,7 @@ class CloudFileManagement {
                 val response =
                     BaseClient.client.post(BaseClient.domain.plus("/files/${fileId}/full-update")) {
                         contentType(ContentType.Application.Json)
-                        bearerAuth(_authToken.toString())
+                        bearerAuth(authToken.toString())
                         setBody(Json.encodeToString(FileFullUpdateDto(content)))
                     }
 
@@ -170,7 +170,7 @@ class CloudFileManagement {
         }
 
         suspend fun deleteFile(fileId: String): String? {
-            if (_authToken == null) {
+            if (authToken == null) {
                 return "You are not logged in."
             }
 
@@ -178,7 +178,7 @@ class CloudFileManagement {
                 val response =
                     BaseClient.client.delete(BaseClient.domain.plus("/files/${fileId}")) {
                         contentType(ContentType.Text.Plain)
-                        bearerAuth(_authToken.toString())
+                        bearerAuth(authToken.toString())
                     }
 
                 return if (response.status.value == 200) {

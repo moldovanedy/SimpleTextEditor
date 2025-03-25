@@ -9,7 +9,7 @@ class UserValidations {
         fun validateEmail(email: String): Boolean {
             val matches = regex.find(email) ?: return false
 
-            return !(matches.groups.isEmpty() || matches.groups.size > 1 || matches.groups[0]?.value != email)
+            return !(matches.groups.isEmpty() || matches.groups[0]?.value != email)
         }
 
         /**

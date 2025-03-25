@@ -103,10 +103,10 @@ private fun AccountPopupMenu(isExpanded: Boolean, onDismissRequested: () -> Unit
                     if (error != null) {
                         Toast.makeText(MainActivity.getContext(), error, Toast.LENGTH_LONG).show()
                     }
-                }
 
-                onDismissRequested.invoke()
-                onLogout.invoke()
+                    onDismissRequested.invoke()
+                    onLogout.invoke()
+                }
             }
         )
     }

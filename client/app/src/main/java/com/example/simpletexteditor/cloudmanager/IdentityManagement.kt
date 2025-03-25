@@ -8,6 +8,7 @@ import com.example.simpletexteditor.cloudmanager.dtos.user.ForgotPasswordUserDto
 import com.example.simpletexteditor.cloudmanager.dtos.user.LoginUserDto
 import com.example.simpletexteditor.cloudmanager.dtos.user.NewUserDto
 import io.ktor.client.call.body
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -69,6 +70,7 @@ class IdentityManagement {
             try {
                 val response =
                     BaseClient.client.post(BaseClient.domain.plus("/users/logout")) {
+                        bearerAuth(CloudFileManagement.authToken.toString())
                         contentType(ContentType.Application.Json)
                     }
 

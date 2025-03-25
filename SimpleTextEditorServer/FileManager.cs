@@ -133,7 +133,7 @@ public static class FileManager
 
                 fs.Seek(offset - diffBytes.Length, SeekOrigin.Begin);
                 fs.SetLength(fs.Length - diffBytes.Length);
-                fs.Write(remainingBytes);
+                await fs.WriteAsync(remainingBytes);
             }
             
             fs.Close();
