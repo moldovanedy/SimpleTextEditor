@@ -11,6 +11,7 @@ import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.delete
 import io.ktor.client.request.get
 import io.ktor.client.request.post
+import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
@@ -179,6 +180,30 @@ class CloudFileManagement {
                     BaseClient.client.delete(BaseClient.domain.plus("/files/${fileId}")) {
                         contentType(ContentType.Text.Plain)
                         bearerAuth(authToken.toString())
+                    }
+
+                return if (response.status.value == 200) {
+                    null
+                } else {
+                    response.body()
+                }
+            } catch (e: Exception) {
+                Log.e("DBG", e.toString())
+                return "An unknown error occurred on your side."
+            }
+        }
+
+        suspend fun renameFile(fileId: String, newName: String): String? {
+            if (authToken == null) {
+                return "You are not logged in."
+            }
+
+            try {
+                val response =
+                    BaseClient.client.put(BaseClient.domain.plus("/files/details/${fileId}")) {
+                        contentType(ContentType.Text.Plain)
+                        bearerAuth(authToken.toString())
+                        setBody(newName)
                     }
 
                 return if (response.status.value == 200) {

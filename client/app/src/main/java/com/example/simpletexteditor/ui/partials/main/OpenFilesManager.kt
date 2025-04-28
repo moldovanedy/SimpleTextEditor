@@ -306,12 +306,16 @@ private fun FileData(
 
                             taskScope.launch {
                                 if (details.isStoredOnCloud) {
-                                    val error: String? = CloudFileManagement.deleteFile(details.id.toString())
+                                    val error: String? =
+                                        CloudFileManagement.renameFile(details.id.toString(), fileNameEdited)
 
                                     if (error != null) {
                                         Toast
                                             .makeText(MainActivity.getContext(), error, Toast.LENGTH_LONG)
                                             .show()
+
+                                        isInProgress = false
+                                        return@launch
                                     }
                                 }
 
